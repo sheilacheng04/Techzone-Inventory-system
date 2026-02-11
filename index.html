@@ -17,7 +17,7 @@
         </div>
         <div class="topbar-right">
             <span class="db-badge">
-                <i class="fas fa-database"></i> MySQL &middot; ACID
+                <i class="fas fa-database"></i> MySQL &middot; MongoDB
             </span>
             <span class="clock" id="liveClock"></span>
         </div>
@@ -159,10 +159,34 @@
 
                         <!-- Customer Selection -->
                         <div class="cart-customer">
-                            <label>Customer</label>
-                            <select id="cartCustomer" class="input-select">
-                                <option value="">-- Walk-in --</option>
+                            <label>Previous Customer <span class="optional">(optional)</span></label>
+                            <select id="cartCustomer" class="input-select" onchange="POS.loadCustomerData()">
+                                <option value="">-- New Customer --</option>
                             </select>
+                        </div>
+
+                        <!-- Customer Details Form -->
+                        <div class="customer-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Name <span class="required">*</span></label>
+                                    <input type="text" id="customerName" class="input-text" placeholder="Full name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Phone <span class="required">*</span></label>
+                                    <input type="tel" id="customerPhone" class="input-text" placeholder="Phone number" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" id="customerEmail" class="input-text" placeholder="Email (optional)">
+                                </div>
+                                <div class="form-group">
+                                    <label>Address</label>
+                                    <input type="text" id="customerAddress" class="input-text" placeholder="Address (optional)">
+                                </div>
+                            </div>
                         </div>
 
                         <div class="cart-items" id="cartItems">
@@ -211,6 +235,7 @@
                                     <th>Selling Price</th>
                                     <th>Wholesale Cost</th>
                                     <th>Margin</th>
+                                    <th>Warranty (Days)</th>
                                     <th>Status</th>
                                 </tr>
                             </thead>
@@ -251,6 +276,8 @@
                                     <th>Unit Price</th>
                                     <th>Line Total</th>
                                     <th>Profit</th>
+                                    <th>Warranty Expires</th>
+                                    <th>Status</th>
                                 </tr>
                             </thead>
                             <tbody id="ledgerBody"></tbody>

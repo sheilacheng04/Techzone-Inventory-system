@@ -70,6 +70,9 @@ const CUSTOMERS = [
     { id: 30, name: 'Maine Mendoza', phone: '0946-000-1111', email: 'yaya.dub@gmail.com', address: 'Bulacan' },
 ];
 
+// Walk-in customers (customers stored from previous sales)
+const WALK_IN_CUSTOMERS = [];
+
 // Items — quantities will be mutated as sales/returns happen
 const ITEMS = [
     { id: 1,  name: 'Ryzen 5 5600',       price: 8500,  cost: 6500,  qty: 50,  supplierId: 1,  typeId: 1 },
@@ -94,6 +97,13 @@ const ITEMS = [
 // Sales built from the DML (using first 100 sale items)
 const SALES = [];
 const SALE_ITEMS = [];
+
+// ========== UTILITY HELPERS - DEFINED EARLY FOR INITIALIZATION ==========
+function calculateWarrantyExpiration(saleDate, warrantyDays) {
+    const date = new Date(saleDate);
+    date.setDate(date.getDate() + warrantyDays);
+    return date.toISOString().slice(0, 10);
+}
 
 // Build sales from DML
 (function buildSalesFromDML() {
@@ -148,7 +158,27 @@ const SALE_ITEMS = [];
         [96,9,1,6500],[97,12,1,1200],[98,14,1,500],[99,8,1,12000],[100,11,1,3000]
     ];
     saleItemsRaw.forEach((r, i) => {
-        SALE_ITEMS.push({ id: i + 1, saleId: r[0], itemId: r[1], qty: r[2], soldPrice: r[3] });
+        const saleId = r[0];
+        const itemId = r[1];
+        const qty = r[2];
+        const soldPrice = r[3];
+        
+        // Get sale date and calculate warranty expiration
+        const sale = SALES.find(s => s.id === saleId);
+        const item = ITEMS.find(it => it.id === itemId);
+        const type = ITEM_TYPES.find(t => t.id === (item ? item.typeId : null));
+        const warrantyDays = type ? type.warranty : 0;
+        const saleDate = sale ? sale.date : new Date().toISOString().slice(0, 10);
+        const warrantyExpiration = calculateWarrantyExpiration(saleDate, warrantyDays);
+        
+        SALE_ITEMS.push({ 
+            id: i + 1, 
+            saleId: saleId, 
+            itemId: itemId, 
+            qty: qty, 
+            soldPrice: soldPrice,
+            warrantyExpiration: warrantyExpiration
+        });
     });
 })();
 
@@ -166,6 +196,17 @@ function getItem(id)      { return ITEMS.find(i => i.id === id); }
 function getType(id)      { return ITEM_TYPES.find(t => t.id === id); }
 function getSupplier(id)  { return SUPPLIERS.find(s => s.id === id); }
 function getCustomer(id)  { return CUSTOMERS.find(c => c.id === id); }
+
+function isWarrantyExpired(warrantyExpirationDate) {
+    return new Date(warrantyExpirationDate) < new Date();
+}
+
+function getWarrantyStatus(warrantyExpirationDate) {
+    if (isWarrantyExpired(warrantyExpirationDate)) {
+        return { status: 'Expired', class: 'warranty-expired', icon: '✗' };
+    }
+    return { status: 'Active', class: 'warranty-active', icon: '✓' };
+}
 
 function showToast(message, type = 'success') {
     const container = document.getElementById('toastContainer');
@@ -343,9 +384,30 @@ const POS = {
 
     populateCustomers() {
         const select = document.getElementById('cartCustomer');
-        CUSTOMERS.forEach(c => {
-            select.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+        WALK_IN_CUSTOMERS.forEach(c => {
+            select.innerHTML += `<option value="${c.phone}">${c.name} - ${c.phone}</option>`;
         });
+    },
+
+    loadCustomerData() {
+        const select = document.getElementById('cartCustomer');
+        const selectedPhone = select.value;
+        
+        if (selectedPhone) {
+            const customer = WALK_IN_CUSTOMERS.find(c => c.phone === selectedPhone);
+            if (customer) {
+                document.getElementById('customerName').value = customer.name;
+                document.getElementById('customerPhone').value = customer.phone;
+                document.getElementById('customerEmail').value = customer.email || '';
+                document.getElementById('customerAddress').value = customer.address || '';
+            }
+        } else {
+            // Clear form for new customer
+            document.getElementById('customerName').value = '';
+            document.getElementById('customerPhone').value = '';
+            document.getElementById('customerEmail').value = '';
+            document.getElementById('customerAddress').value = '';
+        }
     },
 
     filterProducts() {
@@ -462,12 +524,38 @@ const POS = {
     },
 
     processSale() {
-        if (this.cart.length === 0) return;
-
-        const customerId = document.getElementById('cartCustomer').value;
-        if (!customerId) {
-            showToast('Please select a customer', 'warning');
+        if (this.cart.length === 0) {
+            showToast('Please add items to cart', 'warning');
             return;
+        }
+
+        // Get customer data from form
+        const customerName = document.getElementById('customerName').value.trim();
+        const customerPhone = document.getElementById('customerPhone').value.trim();
+        const customerEmail = document.getElementById('customerEmail').value.trim();
+        const customerAddress = document.getElementById('customerAddress').value.trim();
+
+        // Validate required fields
+        if (!customerName) {
+            showToast('Please enter customer name', 'warning');
+            return;
+        }
+        if (!customerPhone) {
+            showToast('Please enter customer phone', 'warning');
+            return;
+        }
+
+        // Check if this is a new customer and add to walk-in customers
+        const existingCustomer = WALK_IN_CUSTOMERS.find(c => c.phone === customerPhone);
+        if (!existingCustomer) {
+            WALK_IN_CUSTOMERS.push({
+                phone: customerPhone,
+                name: customerName,
+                email: customerEmail,
+                address: customerAddress
+            });
+            // Refresh the customer dropdown
+            this.populateCustomers();
         }
 
         // ACID-like: Validate all stock first
@@ -482,18 +570,23 @@ const POS = {
         // Create sale
         const saleId = SALES.length + 1;
         const saleDate = new Date().toISOString().slice(0, 10);
-        SALES.push({ id: saleId, date: saleDate, customerId: Number(customerId) });
+        SALES.push({ id: saleId, date: saleDate, customerId: 0, customerData: { name: customerName, phone: customerPhone, email: customerEmail, address: customerAddress } });
 
         // Process each item atomically
         let receiptHTML = '';
         let total = 0;
         this.cart.forEach(entry => {
             const item = getItem(entry.itemId);
+            const type = getType(item.typeId);
             const lineTotal = entry.price * entry.qty;
             total += lineTotal;
 
             // Deduct inventory (simulates trigger trg_reduce_stock_after_sale)
             item.qty -= entry.qty;
+
+            // Calculate warranty expiration date
+            const warrantyDays = type ? type.warranty : 0;
+            const warrantyExpiration = calculateWarrantyExpiration(saleDate, warrantyDays);
 
             // Record sale item
             SALE_ITEMS.push({
@@ -501,7 +594,8 @@ const POS = {
                 saleId,
                 itemId: entry.itemId,
                 qty: entry.qty,
-                soldPrice: entry.price
+                soldPrice: entry.price,
+                warrantyExpiration: warrantyExpiration
             });
 
             receiptHTML += `<div class="receipt-line"><span>${item.name} x${entry.qty}</span><span>${peso(lineTotal)}</span></div>`;
@@ -517,6 +611,7 @@ const POS = {
         this.cart = [];
         this.renderCart();
         this.renderProducts();
+        this.loadCustomerData(); // Clear customer form
 
         // Refresh dashboard data
         Dashboard.init();
@@ -544,6 +639,7 @@ const Inventory = {
             const type = getType(item.typeId);
             const supplier = getSupplier(item.supplierId);
             const margin = item.price > 0 ? (((item.price - item.cost) / item.price) * 100).toFixed(1) : '0.0';
+            const warranty = type ? type.warranty : 0;
 
             let badge = '', badgeClass = '';
             if (item.qty === 0) { badge = 'Out of Stock'; badgeClass = 'badge-out'; }
@@ -559,6 +655,7 @@ const Inventory = {
                     <td>${peso(item.price)}</td>
                     <td>${peso(item.cost)}</td>
                     <td>${margin}%</td>
+                    <td>${warranty} days</td>
                     <td><span class="badge ${badgeClass}">${badge}</span></td>
                 </tr>`;
         }).join('');
@@ -580,6 +677,7 @@ const Inventory = {
             const type = getType(item.typeId);
             const supplier = getSupplier(item.supplierId);
             const margin = item.price > 0 ? (((item.price - item.cost) / item.price) * 100).toFixed(1) : '0.0';
+            const warranty = type ? type.warranty : 0;
 
             let badge = '', badgeClass = '';
             if (item.qty === 0) { badge = 'Out of Stock'; badgeClass = 'badge-out'; }
@@ -595,6 +693,7 @@ const Inventory = {
                     <td>${peso(item.price)}</td>
                     <td>${peso(item.cost)}</td>
                     <td>${margin}%</td>
+                    <td>${warranty} days</td>
                     <td><span class="badge ${badgeClass}">${badge}</span></td>
                 </tr>`;
         }).join('');
@@ -614,26 +713,40 @@ const Ledger = {
         const rows = SALE_ITEMS.map(si => {
             const sale = SALES.find(s => s.id === si.saleId);
             const item = getItem(si.itemId);
-            const customer = sale ? getCustomer(sale.customerId) : null;
+            let customerName = 'N/A';
+            if (sale) {
+                if (sale.customerData) {
+                    customerName = sale.customerData.name;
+                } else {
+                    const customer = getCustomer(sale.customerId);
+                    customerName = customer ? customer.name : 'N/A';
+                }
+            }
             const lineTotal = si.soldPrice * si.qty;
             const profit = (si.soldPrice - (item ? item.cost : 0)) * si.qty;
-            return { si, sale, item, customer, lineTotal, profit };
+            return { si, sale, item, customerName, lineTotal, profit };
         }).sort((a, b) => {
             if (a.sale && b.sale) return b.sale.date.localeCompare(a.sale.date) || b.si.saleId - a.si.saleId;
             return 0;
         });
 
-        body.innerHTML = rows.map(r => `
+        body.innerHTML = rows.map(r => {
+            const warrantyExp = r.si.warrantyExpiration;
+            const warrantyStatus = warrantyExp ? getWarrantyStatus(warrantyExp) : { status: 'N/A', class: '' };
+            return `
             <tr>
                 <td>${r.si.saleId}</td>
                 <td>${r.sale ? r.sale.date : ''}</td>
-                <td>${r.customer ? r.customer.name : 'N/A'}</td>
+                <td>${r.customerName}</td>
                 <td>${r.item ? r.item.name : 'N/A'}</td>
                 <td>${r.si.qty}</td>
                 <td>${peso(r.si.soldPrice)}</td>
                 <td>${peso(r.lineTotal)}</td>
                 <td style="color: var(--green)">${peso(r.profit)}</td>
-            </tr>`).join('');
+                <td>${warrantyExp ? warrantyExp : 'N/A'}</td>
+                <td><span class="warranty-badge ${warrantyStatus.class}">${warrantyStatus.status}</span></td>
+            </tr>`;
+        }).join('');
     },
 
     filter() {
@@ -644,10 +757,18 @@ const Ledger = {
         const rows = SALE_ITEMS.map(si => {
             const sale = SALES.find(s => s.id === si.saleId);
             const item = getItem(si.itemId);
-            const customer = sale ? getCustomer(sale.customerId) : null;
+            let customerName = 'N/A';
+            if (sale) {
+                if (sale.customerData) {
+                    customerName = sale.customerData.name;
+                } else {
+                    const customer = getCustomer(sale.customerId);
+                    customerName = customer ? customer.name : 'N/A';
+                }
+            }
             const lineTotal = si.soldPrice * si.qty;
             const profit = (si.soldPrice - (item ? item.cost : 0)) * si.qty;
-            return { si, sale, item, customer, lineTotal, profit };
+            return { si, sale, item, customerName, lineTotal, profit };
         }).filter(r => {
             if (!r.sale) return false;
             if (from && r.sale.date < from) return false;
@@ -655,18 +776,23 @@ const Ledger = {
             return true;
         }).sort((a, b) => b.sale.date.localeCompare(a.sale.date) || b.si.saleId - a.si.saleId);
 
-        body.innerHTML = rows.map(r => `
+        body.innerHTML = rows.map(r => {
+            const warrantyExp = r.si.warrantyExpiration;
+            const warrantyStatus = warrantyExp ? getWarrantyStatus(warrantyExp) : { status: 'N/A', class: '' };
+            return `
             <tr>
                 <td>${r.si.saleId}</td>
                 <td>${r.sale.date}</td>
-                <td>${r.customer ? r.customer.name : 'N/A'}</td>
+                <td>${r.customerName}</td>
                 <td>${r.item ? r.item.name : 'N/A'}</td>
                 <td>${r.si.qty}</td>
                 <td>${peso(r.si.soldPrice)}</td>
                 <td>${peso(r.lineTotal)}</td>
                 <td style="color: var(--green)">${peso(r.profit)}</td>
-            </tr>`).join('');
-    }
+                <td>${warrantyExp ? warrantyExp : 'N/A'}</td>
+                <td><span class="warranty-badge ${warrantyStatus.class}">${warrantyStatus.status}</span></td>
+            </tr>`;
+        }).join('');
 };
 
 // ========== RETURNS MODULE ==========
