@@ -603,10 +603,14 @@ body {
     color: var(--text-muted);
 }
 
-.customer-form {
+.customer-form, .product-form {
     padding: 12px 18px;
     border-bottom: 1px solid var(--border);
     background: rgba(255, 20, 147, .08);
+}
+
+.product-form {
+    border-bottom: none;
 }
 .customer-form .form-row {
     display: grid;
@@ -776,6 +780,12 @@ body {
 }
 .form-group .input-select,
 .form-group .input-text { width: 100%; }
+
+.form-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+}
 
 /* ================================================
    ALERTS LIST

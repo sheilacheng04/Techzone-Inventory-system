@@ -620,7 +620,122 @@ const POS = {
 
 const Inventory = {
     init() {
+        this.populateDropdowns();
         this.render();
+    },
+
+    populateDropdowns() {
+        // Populate category dropdown
+        const typeSelect = document.getElementById('productType');
+        typeSelect.innerHTML = '<option value="">-- Select Category --</option>';
+        ITEM_TYPES.forEach(type => {
+            typeSelect.innerHTML += `<option value="${type.id}">${type.name}</option>`;
+        });
+
+        // Populate supplier dropdown
+        const supplierSelect = document.getElementById('productSupplier');
+        supplierSelect.innerHTML = '<option value="">-- Select Supplier --</option>';
+        SUPPLIERS.forEach(supplier => {
+            supplierSelect.innerHTML += `<option value="${supplier.id}">${supplier.name}</option>`;
+        });
+    },
+
+    saveProduct() {
+        const editId = document.getElementById('editProductId').value;
+        const name = document.getElementById('productName').value.trim();
+        const typeId = Number(document.getElementById('productType').value);
+        const supplierId = Number(document.getElementById('productSupplier').value);
+        const qty = Number(document.getElementById('productQty').value);
+        const price = Number(document.getElementById('productPrice').value);
+        const cost = Number(document.getElementById('productCost').value);
+
+        // Validation
+        if (!name) {
+            showToast('Please enter product name', 'warning');
+            return;
+        }
+        if (!typeId) {
+            showToast('Please select a category', 'warning');
+            return;
+        }
+        if (!supplierId) {
+            showToast('Please select a supplier', 'warning');
+            return;
+        }
+        if (price <= 0) {
+            showToast('Selling price must be greater than 0', 'warning');
+            return;
+        }
+        if (cost < 0) {
+            showToast('Cost cannot be negative', 'warning');
+            return;
+        }
+
+        if (editId) {
+            // Edit existing product
+            const item = getItem(Number(editId));
+            if (item) {
+                item.name = name;
+                item.typeId = typeId;
+                item.supplierId = supplierId;
+                item.qty = qty;
+                item.price = price;
+                item.cost = cost;
+                showToast(`Product "${name}" updated successfully`, 'success');
+            }
+        } else {
+            // Add new product
+            const newId = Math.max(...ITEMS.map(i => i.id)) + 1;
+            ITEMS.push({
+                id: newId,
+                name,
+                typeId,
+                supplierId,
+                qty,
+                price,
+                cost
+            });
+            showToast(`Product "${name}" added successfully`, 'success');
+        }
+
+        this.cancelEdit();
+        this.render();
+        POS.init(); // Refresh POS to show new/updated product
+        Dashboard.init(); // Refresh dashboard
+    },
+
+    editProduct(itemId) {
+        const item = getItem(itemId);
+        if (!item) return;
+
+        document.getElementById('editProductId').value = itemId;
+        document.getElementById('productName').value = item.name;
+        document.getElementById('productType').value = item.typeId;
+        document.getElementById('productSupplier').value = item.supplierId;
+        document.getElementById('productQty').value = item.qty;
+        document.getElementById('productPrice').value = item.price;
+        document.getElementById('productCost').value = item.cost;
+
+        document.getElementById('productFormTitle').textContent = 'Edit Product';
+        document.getElementById('productSaveBtn').textContent = 'Update Product';
+        document.getElementById('productCancelBtn').style.display = 'inline-flex';
+
+        // Scroll to form
+        document.querySelector('#view-inventory .card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    },
+
+    cancelEdit() {
+        document.getElementById('editProductId').value = '';
+        document.getElementById('productName').value = '';
+        document.getElementById('productType').value = '';
+        document.getElementById('productSupplier').value = '';
+        document.getElementById('productQty').value = '0';
+        document.getElementById('productPrice').value = '';
+        document.getElementById('productCost').value = '';
+
+        document.getElementById('productFormTitle').textContent = 'Add New Product';
+        document.getElementById('productSaveBtn').textContent = 'Add Product';
+        document.getElementById('productCancelBtn').style.display = 'none';
     },
 
     searchProducts() {
@@ -723,6 +838,11 @@ const Inventory = {
                     <td>${margin}%</td>
                     <td>${warranty} days</td>
                     <td><span class="badge ${badgeClass}">${badge}</span></td>
+                    <td>
+                        <button class="btn-info-circle" onclick="Inventory.editProduct(${item.id})" title="Edit Product">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                    </td>
                 </tr>`;
         }).join('');
     },
@@ -761,6 +881,11 @@ const Inventory = {
                     <td>${margin}%</td>
                     <td>${warranty} days</td>
                     <td><span class="badge ${badgeClass}">${badge}</span></td>
+                    <td>
+                        <button class="btn-info-circle" onclick="Inventory.editProduct(${item.id})" title="Edit Product">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                    </td>
                 </tr>`;
         }).join('');
     }
