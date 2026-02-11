@@ -612,25 +612,28 @@ body {
 .product-form {
     border-bottom: none;
 }
-.customer-form .form-row {
+.customer-form .form-row, .product-form .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
     margin-bottom: 10px;
 }
-.customer-form .form-row:last-child { margin-bottom: 0; }
-.customer-form .form-group {
+.product-form .form-row.row-3 {
+    grid-template-columns: 1fr 1fr 1fr;
+}
+.customer-form .form-row:last-child, .product-form .form-row:last-child { margin-bottom: 0; }
+.customer-form .form-group, .product-form .form-group {
     display: flex;
     flex-direction: column;
 }
-.customer-form label {
+.customer-form label, .product-form label {
     font-size: .75rem;
     color: var(--text-muted);
     text-transform: uppercase;
     letter-spacing: .5px;
     margin-bottom: 4px;
 }
-.customer-form .required {
+.customer-form .required, .product-form .required {
     color: var(--accent);
     font-weight: 700;
 }

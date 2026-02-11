@@ -640,6 +640,36 @@ const Inventory = {
         });
     },
 
+    calculatePrice() {
+        const cost = parseFloat(document.getElementById('productCost').value) || 0;
+        const margin = parseFloat(document.getElementById('productMargin').value) || 0;
+        const priceInput = document.getElementById('productPrice');
+
+        if (cost > 0 && margin >= 0) {
+            if (margin >= 100) {
+                showToast('Margin must be less than 100%', 'warning');
+                return;
+            }
+            // SP = CP / (1 - (Margin/100))
+            const sp = cost / (1 - (margin / 100));
+            priceInput.value = sp.toFixed(2);
+        }
+    },
+
+    calculateMargin() {
+        const cost = parseFloat(document.getElementById('productCost').value) || 0;
+        const sp = parseFloat(document.getElementById('productPrice').value) || 0;
+        const marginInput = document.getElementById('productMargin');
+
+        if (cost > 0 && sp > 0) {
+            // Margin = (SP - CP) / SP * 100
+            const margin = ((sp - cost) / sp) * 100;
+            marginInput.value = margin.toFixed(1);
+        } else {
+            marginInput.value = '';
+        }
+    },
+
     saveProduct() {
         const editId = document.getElementById('editProductId').value;
         const name = document.getElementById('productName').value.trim();
@@ -715,6 +745,10 @@ const Inventory = {
         document.getElementById('productQty').value = item.qty;
         document.getElementById('productPrice').value = item.price;
         document.getElementById('productCost').value = item.cost;
+        
+        // Populate margin field
+        const margin = item.price > 0 ? (((item.price - item.cost) / item.price) * 100).toFixed(1) : '0';
+        document.getElementById('productMargin').value = margin;
 
         document.getElementById('productFormTitle').textContent = 'Edit Product';
         document.getElementById('productSaveBtn').textContent = 'Update Product';
@@ -732,6 +766,7 @@ const Inventory = {
         document.getElementById('productQty').value = '0';
         document.getElementById('productPrice').value = '';
         document.getElementById('productCost').value = '';
+        document.getElementById('productMargin').value = '';
 
         document.getElementById('productFormTitle').textContent = 'Add New Product';
         document.getElementById('productSaveBtn').textContent = 'Add Product';
