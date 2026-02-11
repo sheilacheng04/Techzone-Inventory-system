@@ -565,7 +565,7 @@ body {
 .profit-row { color: var(--green); font-weight: 600; font-size: .82rem; }
 
 #processBtn {
-    margin: 0 18px 18px;
+    margin: 12px 0 0 0;
     border-radius: var(--radius-sm);
 }
 
