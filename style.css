@@ -324,6 +324,57 @@ body {
 .badge-pending  { background: var(--orange-bg); color: var(--orange); }
 .badge-approved { background: var(--green-bg); color: var(--green); }
 
+/* Info Button */
+.btn-info-circle {
+    background: var(--bg-input);
+    color: var(--accent);
+    border: 1px solid var(--border);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition);
+    text-decoration: none;
+    font-size: 0.75rem;
+}
+.btn-info-circle:hover {
+    background: var(--accent);
+    color: white;
+    transform: scale(1.1);
+    box-shadow: 0 0 10px var(--accent-glow);
+}
+
+/* Detail Section in Modal */
+.detail-section {
+    text-align: left;
+    margin-top: 15px;
+    border-top: 1px solid var(--border);
+    padding-top: 15px;
+}
+.detail-title {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 8px;
+    letter-spacing: 1px;
+    font-weight: 700;
+}
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    margin-bottom: 4px;
+}
+.detail-label { color: var(--text-secondary); }
+.detail-value { color: var(--text-primary); font-weight: 500; }
+
+.modal.modal-large {
+    max-width: 480px;
+}
+
 /* ================================================
    INPUTS / BUTTONS
    ================================================ */
@@ -502,7 +553,55 @@ body {
 
 .cart-customer { padding: 12px 18px; border-bottom: 1px solid var(--border); }
 .cart-customer label { font-size: .75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; display: block; margin-bottom: 6px; }
-.cart-customer .input-select { width: 100%; }
+
+.customer-search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+.customer-search-box i {
+    position: absolute;
+    left: 10px;
+    color: var(--text-muted);
+    font-size: .85rem;
+}
+.customer-search-box .input-text {
+    width: 100%;
+    padding: 8px 10px 8px 30px;
+    background: var(--bg-input);
+}
+
+.customer-search-results {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    max-height: 150px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+
+.customer-result {
+    padding: 10px 12px;
+    border-bottom: 1px solid transparent;
+    cursor: pointer;
+    font-size: .82rem;
+    transition: background 0.15s ease;
+}
+.customer-result:hover {
+    background: rgba(255, 20, 147, .15);
+}
+.customer-result:last-child {
+    border-bottom: none;
+}
+.customer-result-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+.customer-result-phone {
+    font-size: .75rem;
+    color: var(--text-muted);
+}
 
 .customer-form {
     padding: 12px 18px;
@@ -617,6 +716,45 @@ body {
 #processBtn {
     margin: 12px 0 0 0;
     border-radius: var(--radius-sm);
+}
+
+/* ================================================
+   RETURNS FORM
+   ================================================ */
+/* ================================================
+   INVENTORY STOCK MANAGEMENT
+   ================================================ */
+.stock-form {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 14px;
+    align-items: end;
+}
+.stock-form .form-group {
+    display: flex;
+    flex-direction: column;
+}
+.stock-form .form-group label {
+    font-size: .75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 6px;
+    display: block;
+}
+.stock-form .input-select,
+.stock-form .input-text {
+    width: 100%;
+    padding: 8px 10px;
+    background: var(--bg-input);
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-size: .82rem;
+}
+.stock-form .input-text:read-only {
+    opacity: 0.7;
+    cursor: not-allowed;
 }
 
 /* ================================================

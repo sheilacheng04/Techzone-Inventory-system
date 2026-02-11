@@ -41,33 +41,8 @@ const CUSTOMERS = [
     { id: 1, name: 'Juan Dela Cruz', phone: '0917-111-2222', email: 'juan.dc@gmail.com', address: 'Quezon City' },
     { id: 2, name: 'Maria Santos', phone: '0918-222-3333', email: 'maria.santos@yahoo.com', address: 'Makati City' },
     { id: 3, name: 'Jose Rizal', phone: '0919-333-4444', email: 'j.rizal@gmail.com', address: 'Manila' },
-    { id: 4, name: 'Andres Bonifacio', phone: '0920-444-5555', email: 'andres.b@outlook.com', address: 'Tondo' },
-    { id: 5, name: 'Gabriela Silang', phone: '0921-555-6666', email: 'g.silang@gmail.com', address: 'Ilocos' },
-    { id: 6, name: 'Emilio Aguinaldo', phone: '0922-666-7777', email: 'emilio.a@yahoo.com', address: 'Cavite' },
-    { id: 7, name: 'Apolinario Mabini', phone: '0923-777-8888', email: 'poly.mabini@gmail.com', address: 'Batangas' },
-    { id: 8, name: 'Melchora Aquino', phone: '0924-888-9999', email: 'tandang.sora@gmail.com', address: 'Quezon City' },
-    { id: 9, name: 'Antonio Luna', phone: '0925-999-0000', email: 'gen.luna@hotmail.com', address: 'Manila' },
-    { id: 10, name: 'Gregorio Del Pilar', phone: '0926-000-1111', email: 'goyo.dp@gmail.com', address: 'Bulacan' },
-    { id: 11, name: 'Lapu Lapu', phone: '0927-111-2222', email: 'lapu.cebu@yahoo.com', address: 'Cebu' },
-    { id: 12, name: 'Francisco Balagtas', phone: '0928-222-3333', email: 'kiko.b@gmail.com', address: 'Bulacan' },
-    { id: 13, name: 'Grace Poe', phone: '0929-333-4444', email: 'grace.p@senate.gov', address: 'Manila' },
-    { id: 14, name: 'Manny Pacquiao', phone: '0930-444-5555', email: 'pacman@gym.com', address: 'GenSan' },
-    { id: 15, name: 'Catriona Gray', phone: '0931-555-6666', email: 'cat.gray@universe.com', address: 'Albay' },
-    { id: 16, name: 'Pia Wurtzbach', phone: '0932-666-7777', email: 'pia.w@universe.com', address: 'CDO' },
-    { id: 17, name: 'Lea Salonga', phone: '0933-777-8888', email: 'lea.s@broadway.com', address: 'Manila' },
-    { id: 18, name: 'Arnel Pineda', phone: '0934-888-9999', email: 'arnel.journey@gmail.com', address: 'Manila' },
-    { id: 19, name: 'Regine Velasquez', phone: '0935-999-0000', email: 'regine.v@gma.com', address: 'Bulacan' },
-    { id: 20, name: 'Sarah Geronimo', phone: '0936-000-1111', email: 'sarah.g@pop.com', address: 'Manila' },
-    { id: 21, name: 'Vice Ganda', phone: '0937-111-2222', email: 'vice.g@showtime.com', address: 'Manila' },
-    { id: 22, name: 'Coco Martin', phone: '0938-222-3333', email: 'coco.m@angprob.com', address: 'Quezon City' },
-    { id: 23, name: 'Kathryn Bernardo', phone: '0939-333-4444', email: 'kath.b@abs.com', address: 'Nueva Ecija' },
-    { id: 24, name: 'Daniel Padilla', phone: '0940-444-5555', email: 'dj.padilla@abs.com', address: 'Manila' },
-    { id: 25, name: 'Liza Soberano', phone: '0941-555-6666', email: 'liza.s@care.com', address: 'Manila' },
-    { id: 26, name: 'Enrique Gil', phone: '0942-666-7777', email: 'quen.gil@abs.com', address: 'Cebu' },
-    { id: 27, name: 'Joshua Garcia', phone: '0943-777-8888', email: 'josh.g@gmail.com', address: 'Batangas' },
-    { id: 28, name: 'Julia Barretto', phone: '0944-888-9999', email: 'julia.b@gmail.com', address: 'Marikina' },
-    { id: 29, name: 'Alden Richards', phone: '0945-999-0000', email: 'alden.r@gma.com', address: 'Laguna' },
-    { id: 30, name: 'Maine Mendoza', phone: '0946-000-1111', email: 'yaya.dub@gmail.com', address: 'Bulacan' },
+    { id: 4, name: 'Andres Bonifacio', phone: '0920-444-5555', email: 'a.boni@yahoo.com', address: 'Tondo, Manila' },
+    { id: 5, name: 'Emilio Aguinaldo', phone: '0921-555-6666', email: 'e.agui@gmail.com', address: 'Cavite' },
 ];
 
 // Walk-in customers (customers stored from previous sales)
@@ -124,38 +99,18 @@ function calculateWarrantyExpiration(saleDate, warrantyDays) {
         '2025-02-12','2025-02-12','2025-02-13','2025-02-13','2025-02-14','2025-02-14','2025-02-14',
         '2025-02-15','2025-02-15'
     ];
-    const saleCustomers = [
-        1,2,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,21,22,23,24,25,26,27,28,29,30,
-        1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,21,22,23,24,25,26,27,28,29,30,1,
-        2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,21,22,23,24,25,26,27,28,29,30,1,2,
-        3,4,5,6,7,8,9,10,11,12
-    ];
+    const saleCustomers = [1, 2, 3, 4, 5];
 
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 5; i++) {
         SALES.push({ id: i + 1, date: saleDates[i], customerId: saleCustomers[i] });
     }
 
     const saleItemsRaw = [
-        [1,1,1,8500],[2,2,1,18500],[3,3,2,1500],[4,4,1,995],[5,1,10,8200],
-        [6,5,1,7500],[7,2,1,18500],[8,6,1,2500],[9,7,1,3500],[10,8,1,12000],
-        [11,9,1,6500],[12,10,1,38000],[13,11,1,3000],[14,12,1,1200],[15,13,5,8000],
-        [16,14,1,500],[17,1,1,8500],[18,15,1,2500],[19,16,1,1500],[20,5,2,7500],
-        [21,17,1,18000],[22,1,1,8500],[23,4,1,995],[24,6,1,2500],[25,7,1,3500],
-        [26,10,1,38000],[27,13,1,8000],[28,12,1,1200],[29,8,1,12000],[30,14,2,500],
-        [31,11,1,3000],[32,9,1,6500],[33,3,4,1500],[34,17,1,18000],[35,5,1,7500],
-        [36,16,1,1500],[37,15,1,2500],[38,1,1,8500],[39,2,2,18500],[40,4,1,995],
-        [41,6,1,2500],[42,13,1,8000],[43,7,1,3500],[44,10,1,38000],[45,9,1,6500],
-        [46,12,1,1200],[47,14,1,500],[48,8,1,12000],[49,11,1,3000],[50,3,2,1500],
-        [51,17,1,18000],[52,5,1,7500],[53,16,1,1500],[54,15,1,2500],[55,1,1,8500],
-        [56,2,1,18500],[57,4,1,995],[58,6,1,2500],[59,13,1,8000],[60,7,2,3500],
-        [61,10,1,38000],[62,9,1,6500],[63,12,1,1200],[64,14,1,500],[65,8,1,12000],
-        [66,11,1,3000],[67,3,2,1500],[68,17,1,18000],[69,5,1,7500],[70,16,1,1500],
-        [71,15,1,2500],[72,1,1,8500],[73,2,5,18500],[74,4,1,995],[75,6,1,2500],
-        [76,13,1,8000],[77,7,1,3500],[78,10,1,38000],[79,9,1,6500],[80,12,1,1200],
-        [81,14,1,500],[82,8,1,12000],[83,11,1,3000],[84,3,2,1500],[85,17,1,18000],
-        [86,5,1,7500],[87,16,1,1500],[88,15,1,2500],[89,1,1,8500],[90,2,1,18500],
-        [91,4,1,995],[92,6,1,2500],[93,13,1,8000],[94,7,1,3500],[95,10,1,38000],
-        [96,9,1,6500],[97,12,1,1200],[98,14,1,500],[99,8,1,12000],[100,11,1,3000]
+        [1,1,1,8500],
+        [2,2,1,18500],
+        [3,3,2,1500],
+        [4,4,1,995],
+        [5,5,1,7500]
     ];
     saleItemsRaw.forEach((r, i) => {
         const saleId = r[0];
@@ -383,30 +338,56 @@ const POS = {
     },
 
     populateCustomers() {
-        const select = document.getElementById('cartCustomer');
-        WALK_IN_CUSTOMERS.forEach(c => {
-            select.innerHTML += `<option value="${c.phone}">${c.name} - ${c.phone}</option>`;
-        });
+        // Old method - no longer used with search box
+        // Kept for backwards compatibility if needed
     },
 
-    loadCustomerData() {
-        const select = document.getElementById('cartCustomer');
-        const selectedPhone = select.value;
+    searchCustomers() {
+        const search = document.getElementById('customerSearch').value.toLowerCase().trim();
+        const resultsContainer = document.getElementById('customerSearchResults');
         
-        if (selectedPhone) {
-            const customer = WALK_IN_CUSTOMERS.find(c => c.phone === selectedPhone);
-            if (customer) {
-                document.getElementById('customerName').value = customer.name;
-                document.getElementById('customerPhone').value = customer.phone;
-                document.getElementById('customerEmail').value = customer.email || '';
-                document.getElementById('customerAddress').value = customer.address || '';
-            }
-        } else {
-            // Clear form for new customer
-            document.getElementById('customerName').value = '';
-            document.getElementById('customerPhone').value = '';
-            document.getElementById('customerEmail').value = '';
-            document.getElementById('customerAddress').value = '';
+        if (search.length === 0) {
+            resultsContainer.style.display = 'none';
+            resultsContainer.innerHTML = '';
+            return;
+        }
+
+        // Combine all known customers (Mock Data + Walk-ins)
+        const allPotential = [...CUSTOMERS, ...WALK_IN_CUSTOMERS];
+
+        // Filter customers by name or phone
+        const matches = allPotential.filter(c => 
+            (c.name && c.name.toLowerCase().includes(search)) || 
+            (c.phone && c.phone.includes(search))
+        );
+
+        if (matches.length === 0) {
+            resultsContainer.innerHTML = '<div style="padding:10px 12px;color:var(--text-muted);font-size:.82rem;">No customers found</div>';
+            resultsContainer.style.display = 'block';
+            return;
+        }
+
+        // Display matching customers
+        resultsContainer.innerHTML = matches.map(c => `
+            <div class="customer-result" onclick="POS.selectCustomer('${c.phone}')">
+                <div class="customer-result-name">${c.name}</div>
+                <div class="customer-result-phone">${c.phone}</div>
+            </div>
+        `).join('');
+        resultsContainer.style.display = 'block';
+    },
+
+    selectCustomer(phone) {
+        // Search in both arrays
+        const allPotential = [...CUSTOMERS, ...WALK_IN_CUSTOMERS];
+        const customer = allPotential.find(c => c.phone === phone);
+        if (customer) {
+            document.getElementById('customerName').value = customer.name;
+            document.getElementById('customerPhone').value = customer.phone;
+            document.getElementById('customerEmail').value = customer.email || '';
+            document.getElementById('customerAddress').value = customer.address || '';
+            document.getElementById('customerSearch').value = customer.name;
+            document.getElementById('customerSearchResults').style.display = 'none';
         }
     },
 
@@ -545,8 +526,9 @@ const POS = {
             return;
         }
 
-        // Check if this is a new customer and add to walk-in customers
-        const existingCustomer = WALK_IN_CUSTOMERS.find(c => c.phone === customerPhone);
+        // Check if this is a new customer (check both mock data and walk-ins)
+        const allPotential = [...CUSTOMERS, ...WALK_IN_CUSTOMERS];
+        const existingCustomer = allPotential.find(c => c.phone === customerPhone);
         if (!existingCustomer) {
             WALK_IN_CUSTOMERS.push({
                 phone: customerPhone,
@@ -611,10 +593,18 @@ const POS = {
         this.cart = [];
         this.renderCart();
         this.renderProducts();
-        this.loadCustomerData(); // Clear customer form
+        // Clear customer form and search
+        document.getElementById('customerSearch').value = '';
+        document.getElementById('customerName').value = '';
+        document.getElementById('customerPhone').value = '';
+        document.getElementById('customerEmail').value = '';
+        document.getElementById('customerAddress').value = '';
+        document.getElementById('customerSearchResults').style.display = 'none';
 
         // Refresh dashboard data
         Dashboard.init();
+        Ledger.init();
+        Returns.init();
 
         // Check new low stock alerts
         const newLow = ITEMS.filter(i => i.qty > 0 && i.qty <= LOW_STOCK_THRESHOLD);
@@ -630,7 +620,64 @@ const POS = {
 
 const Inventory = {
     init() {
+        this.populateProducts();
         this.render();
+    },
+
+    populateProducts() {
+        const select = document.getElementById('addStockProduct');
+        select.innerHTML = '<option value="">-- Select Product --</option>';
+        ITEMS.forEach(item => {
+            select.innerHTML += `<option value="${item.id}">${item.name}</option>`;
+        });
+    },
+
+    updateStockInfo() {
+        const productId = Number(document.getElementById('addStockProduct').value);
+        if (productId) {
+            const item = getItem(productId);
+            if (item) {
+                document.getElementById('currentStock').value = item.qty;
+                document.getElementById('addStockQty').value = 1;
+            }
+        } else {
+            document.getElementById('currentStock').value = '';
+            document.getElementById('addStockQty').value = 1;
+        }
+    },
+
+    addStock() {
+        const productId = Number(document.getElementById('addStockProduct').value);
+        const qtyToAdd = Number(document.getElementById('addStockQty').value);
+
+        if (!productId) {
+            showToast('Please select a product', 'warning');
+            return;
+        }
+
+        if (qtyToAdd <= 0) {
+            showToast('Quantity must be greater than 0', 'warning');
+            return;
+        }
+
+        const item = getItem(productId);
+        if (!item) {
+            showToast('Product not found', 'error');
+            return;
+        }
+
+        const oldQty = item.qty;
+        item.qty += qtyToAdd;
+
+        // Reset form
+        document.getElementById('addStockProduct').value = '';
+        document.getElementById('currentStock').value = '';
+        document.getElementById('addStockQty').value = 1;
+
+        // Refresh inventory display
+        this.render();
+
+        showToast(`Added ${qtyToAdd} units to ${item.name}. Stock updated: ${oldQty} → ${item.qty}`, 'success');
     },
 
     render() {
@@ -714,18 +761,21 @@ const Ledger = {
             const sale = SALES.find(s => s.id === si.saleId);
             const item = getItem(si.itemId);
             let customerName = 'N/A';
+            let customerDetails = null;
             if (sale) {
                 if (sale.customerData) {
                     customerName = sale.customerData.name;
+                    customerDetails = sale.customerData;
                 } else {
                     const customer = getCustomer(sale.customerId);
                     customerName = customer ? customer.name : 'N/A';
+                    customerDetails = customer;
                 }
             }
             const lineTotal = si.soldPrice * si.qty;
             const profit = (si.soldPrice - (item ? item.cost : 0)) * si.qty;
-            return { si, sale, item, customerName, lineTotal, profit };
-        }).sort((a, b) => {
+            return { si, sale, item, customerName, customerDetails, lineTotal, profit };
+        }).filter(r => r.customerName !== 'N/A').sort((a, b) => {
             if (a.sale && b.sale) return b.sale.date.localeCompare(a.sale.date) || b.si.saleId - a.si.saleId;
             return 0;
         });
@@ -745,6 +795,11 @@ const Ledger = {
                 <td style="color: var(--green)">${peso(r.profit)}</td>
                 <td>${warrantyExp ? warrantyExp : 'N/A'}</td>
                 <td><span class="warranty-badge ${warrantyStatus.class}">${warrantyStatus.status}</span></td>
+                <td>
+                    <button class="btn-info-circle" onclick="Ledger.showDetails(${r.si.id})" title="View Details">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </td>
             </tr>`;
         }).join('');
     },
@@ -758,19 +813,23 @@ const Ledger = {
             const sale = SALES.find(s => s.id === si.saleId);
             const item = getItem(si.itemId);
             let customerName = 'N/A';
+            let customerDetails = null;
             if (sale) {
                 if (sale.customerData) {
                     customerName = sale.customerData.name;
+                    customerDetails = sale.customerData;
                 } else {
                     const customer = getCustomer(sale.customerId);
                     customerName = customer ? customer.name : 'N/A';
+                    customerDetails = customer;
                 }
             }
             const lineTotal = si.soldPrice * si.qty;
             const profit = (si.soldPrice - (item ? item.cost : 0)) * si.qty;
-            return { si, sale, item, customerName, lineTotal, profit };
+            return { si, sale, item, customerName, customerDetails, lineTotal, profit };
         }).filter(r => {
             if (!r.sale) return false;
+            if (r.customerName === 'N/A') return false;
             if (from && r.sale.date < from) return false;
             if (to && r.sale.date > to) return false;
             return true;
@@ -791,8 +850,62 @@ const Ledger = {
                 <td style="color: var(--green)">${peso(r.profit)}</td>
                 <td>${warrantyExp ? warrantyExp : 'N/A'}</td>
                 <td><span class="warranty-badge ${warrantyStatus.class}">${warrantyStatus.status}</span></td>
+                <td>
+                    <button class="btn-info-circle" onclick="Ledger.showDetails(${r.si.id})" title="View Details">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </td>
             </tr>`;
         }).join('');
+    },
+
+    showDetails(saleItemId) {
+        const si = SALE_ITEMS.find(item => item.id === saleItemId);
+        if (!si) return;
+
+        const sale = SALES.find(s => s.id === si.saleId);
+        const product = getItem(si.itemId);
+        
+        let customer = { name: 'Walk-in Customer', phone: 'N/A', email: 'N/A', address: 'N/A' };
+        if (sale) {
+            if (sale.customerData) {
+                customer = sale.customerData;
+            } else {
+                const c = getCustomer(sale.customerId);
+                if (c) customer = c;
+            }
+        }
+
+        const content = `
+            <div class="receipt-line"><span>Sale ID</span><span>#${si.saleId}</span></div>
+            <div class="receipt-line"><span>Date</span><span>${sale ? sale.date : 'N/A'}</span></div>
+            <div class="receipt-line"><span>Product</span><span>${product ? product.name : 'Unknown'}</span></div>
+            <div class="receipt-line"><span>Quantity</span><span>${si.qty} units</span></div>
+            <div class="receipt-line"><span>Unit Price</span><span>${peso(si.soldPrice)}</span></div>
+            <div class="receipt-total"><span>Line Total</span><span>${peso(si.soldPrice * si.qty)}</span></div>
+            
+            <div class="detail-section">
+                <div class="detail-title">Customer Information</div>
+                <div class="detail-row"><span class="detail-label">Name</span><span class="detail-value">${customer.name}</span></div>
+                <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">${customer.phone}</span></div>
+                <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">${customer.email || 'N/A'}</span></div>
+                <div class="detail-row"><span class="detail-label">Address</span><span class="detail-value">${customer.address || 'N/A'}</span></div>
+            </div>
+            
+            <div class="detail-section">
+                <div class="detail-title">Warranty Status</div>
+                <div class="detail-row"><span class="detail-label">Expires On</span><span class="detail-value">${si.warrantyExpiration || 'N/A'}</span></div>
+                <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value" style="color:${getWarrantyStatus(si.warrantyExpiration).class === 'warranty-active' ? 'var(--green)' : 'var(--red)'}">${getWarrantyStatus(si.warrantyExpiration).status}</span></div>
+            </div>
+        `;
+
+        document.getElementById('saleDetailsContent').innerHTML = content;
+        document.getElementById('saleDetailsModal').classList.add('show');
+    },
+
+    closeDetailsModal() {
+        document.getElementById('saleDetailsModal').classList.remove('show');
+    }
 };
 
 // ========== RETURNS MODULE ==========
@@ -805,12 +918,18 @@ const Returns = {
 
     populateSales() {
         const select = document.getElementById('returnSaleId');
-        // Only show sales that have sale items
+        // Clear existing options
+        select.innerHTML = '<option value="">-- Select Sale --</option>';
+        // Only show sales that have sale items and valid customer names
         const saleIds = [...new Set(SALE_ITEMS.map(si => si.saleId))].sort((a, b) => b - a);
         saleIds.forEach(sid => {
             const sale = SALES.find(s => s.id === sid);
-            const customer = sale ? getCustomer(sale.customerId) : null;
-            select.innerHTML += `<option value="${sid}">Sale #${sid} — ${customer ? customer.name : 'N/A'} (${sale ? sale.date : ''})</option>`;
+            const customerData = sale.customerData;
+            const customerName = customerData ? customerData.name : getCustomer(sale.customerId)?.name || 'N/A';
+            // Only add if customer name is not N/A
+            if (customerName !== 'N/A') {
+                select.innerHTML += `<option value="${sid}">Sale #${sid} — ${customerName} (${sale ? sale.date : ''})</option>`;
+            }
         });
     },
 
