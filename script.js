@@ -735,10 +735,13 @@ const Inventory = {
     },
 
     editProduct(itemId) {
-        const item = getItem(itemId);
-        if (!item) return;
+        const item = getItem(Number(itemId));
+        if (!item) {
+            console.error('Product not found:', itemId);
+            return;
+        }
 
-        document.getElementById('editProductId').value = itemId;
+        document.getElementById('editProductId').value = item.id;
         document.getElementById('productName').value = item.name;
         document.getElementById('productType').value = item.typeId;
         document.getElementById('productSupplier').value = item.supplierId;
@@ -754,8 +757,11 @@ const Inventory = {
         document.getElementById('productSaveBtn').textContent = 'Update Product';
         document.getElementById('productCancelBtn').style.display = 'inline-flex';
 
-        // Scroll to form
-        document.querySelector('#view-inventory .card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        // Scroll to form - more robust selector
+        const formCard = document.querySelector('#view-inventory .card');
+        if (formCard) {
+            formCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
     },
 
     cancelEdit() {
@@ -1473,6 +1479,13 @@ const Returns = {
 };
 
 // ========== INITIALIZE ALL MODULES ON LOAD ==========
+
+// Globalize for environment compatibility (e.g. GitHub Pages)
+window.Inventory = Inventory;
+window.POS = POS;
+window.Ledger = Ledger;
+window.Returns = Returns;
+window.Dashboard = Dashboard;
 
 document.addEventListener('DOMContentLoaded', () => {
     Dashboard.init();

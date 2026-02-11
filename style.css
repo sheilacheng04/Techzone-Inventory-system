@@ -346,6 +346,9 @@ body {
     transform: scale(1.1);
     box-shadow: 0 0 10px var(--accent-glow);
 }
+.btn-info-circle i {
+    pointer-events: none;
+}
 
 /* Detail Section in Modal */
 .detail-section {
