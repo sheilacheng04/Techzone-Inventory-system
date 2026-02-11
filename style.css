@@ -572,7 +572,7 @@ body {
     background: var(--bg-input);
 }
 
-.customer-search-results {
+.customer-search-results, .product-search-results {
     background: var(--bg-input);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
@@ -581,24 +581,24 @@ body {
     margin-bottom: 10px;
 }
 
-.customer-result {
+.customer-result, .product-result {
     padding: 10px 12px;
     border-bottom: 1px solid transparent;
     cursor: pointer;
     font-size: .82rem;
     transition: background 0.15s ease;
 }
-.customer-result:hover {
+.customer-result:hover, .product-result:hover {
     background: rgba(255, 20, 147, .15);
 }
-.customer-result:last-child {
+.customer-result:last-child, .product-result:last-child {
     border-bottom: none;
 }
-.customer-result-name {
+.customer-result-name, .product-result-name {
     font-weight: 600;
     color: var(--text-primary);
 }
-.customer-result-phone {
+.customer-result-phone, .product-result-info {
     font-size: .75rem;
     color: var(--text-muted);
 }

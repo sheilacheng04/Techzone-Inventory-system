@@ -220,14 +220,17 @@
                     <div class="card-body">
                         <div class="stock-form">
                             <div class="form-group">
-                                <label>Product</label>
-                                <select id="addStockProduct" class="input-select" onchange="Inventory.updateStockInfo()">
-                                    <option value="">-- Select Product --</option>
-                                </select>
+                                <label>Search Product <span class="required">*</span></label>
+                                <div class="customer-search-box">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="addStockSearch" class="input-text" placeholder="Type name to find product..." oninput="Inventory.searchProducts()">
+                                </div>
+                                <div class="product-search-results" id="addStockResults" style="display:none;"></div>
+                                <input type="hidden" id="addStockProductId">
                             </div>
                             <div class="form-group">
                                 <label>Current Stock</label>
-                                <input type="text" id="currentStock" class="input-text" readonly>
+                                <input type="text" id="currentStock" class="input-text" readonly placeholder="Select a product first">
                             </div>
                             <div class="form-group">
                                 <label>Quantity to Add</label>
@@ -291,6 +294,10 @@
                     <div class="card-header">
                         <h3>Sales History</h3>
                         <div class="header-actions">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="ledgerSearch" placeholder="Search sales..." class="input-text" oninput="Ledger.filter()">
+                            </div>
                             <input type="date" id="ledgerDateFrom" class="input-text" onchange="Ledger.filter()">
                             <span class="date-separator">to</span>
                             <input type="date" id="ledgerDateTo" class="input-text" onchange="Ledger.filter()">
@@ -369,6 +376,8 @@
                                     <th>Item</th>
                                     <th>Qty</th>
                                     <th>Reason</th>
+                                    <th>Disposition</th>
+                                    <th>Profit Impact</th>
                                     <th>Status</th>
                                 </tr>
                             </thead>

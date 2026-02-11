@@ -620,38 +620,54 @@ const POS = {
 
 const Inventory = {
     init() {
-        this.populateProducts();
         this.render();
     },
 
-    populateProducts() {
-        const select = document.getElementById('addStockProduct');
-        select.innerHTML = '<option value="">-- Select Product --</option>';
-        ITEMS.forEach(item => {
-            select.innerHTML += `<option value="${item.id}">${item.name}</option>`;
-        });
+    searchProducts() {
+        const search = document.getElementById('addStockSearch').value.toLowerCase().trim();
+        const resultsContainer = document.getElementById('addStockResults');
+        
+        if (search.length === 0) {
+            resultsContainer.style.display = 'none';
+            resultsContainer.innerHTML = '';
+            return;
+        }
+
+        const matches = ITEMS.filter(item => 
+            item.name.toLowerCase().includes(search)
+        );
+
+        if (matches.length === 0) {
+            resultsContainer.innerHTML = '<div style="padding:10px 12px;color:var(--text-muted);font-size:.82rem;">No products found</div>';
+            resultsContainer.style.display = 'block';
+            return;
+        }
+
+        resultsContainer.innerHTML = matches.map(item => `
+            <div class="product-result" onclick="Inventory.selectProduct(${item.id})">
+                <div class="product-result-name">${item.name}</div>
+                <div class="product-result-info">Current: ${item.qty} units</div>
+            </div>
+        `).join('');
+        resultsContainer.style.display = 'block';
     },
 
-    updateStockInfo() {
-        const productId = Number(document.getElementById('addStockProduct').value);
-        if (productId) {
-            const item = getItem(productId);
-            if (item) {
-                document.getElementById('currentStock').value = item.qty;
-                document.getElementById('addStockQty').value = 1;
-            }
-        } else {
-            document.getElementById('currentStock').value = '';
-            document.getElementById('addStockQty').value = 1;
+    selectProduct(productId) {
+        const item = getItem(productId);
+        if (item) {
+            document.getElementById('addStockSearch').value = item.name;
+            document.getElementById('addStockProductId').value = productId;
+            document.getElementById('currentStock').value = item.qty;
+            document.getElementById('addStockResults').style.display = 'none';
         }
     },
 
     addStock() {
-        const productId = Number(document.getElementById('addStockProduct').value);
+        const productId = Number(document.getElementById('addStockProductId').value);
         const qtyToAdd = Number(document.getElementById('addStockQty').value);
 
         if (!productId) {
-            showToast('Please select a product', 'warning');
+            showToast('Please select a product from the list', 'warning');
             return;
         }
 
@@ -670,12 +686,15 @@ const Inventory = {
         item.qty += qtyToAdd;
 
         // Reset form
-        document.getElementById('addStockProduct').value = '';
+        document.getElementById('addStockSearch').value = '';
+        document.getElementById('addStockProductId').value = '';
         document.getElementById('currentStock').value = '';
         document.getElementById('addStockQty').value = 1;
 
-        // Refresh inventory display
+        // Refresh displays
         this.render();
+        Dashboard.init(); // Refresh alerts
+        POS.renderProducts(); // Refresh POS tiles
 
         showToast(`Added ${qtyToAdd} units to ${item.name}. Stock updated: ${oldQty} → ${item.qty}`, 'success');
     },
@@ -756,8 +775,12 @@ const Ledger = {
 
     render() {
         const body = document.getElementById('ledgerBody');
-        // Join SALE_ITEMS with SALES and ITEMS
-        const rows = SALE_ITEMS.map(si => {
+        
+        // Combine SALE_ITEMS and RETURNS into a unified ledger
+        const allTransactions = [];
+        
+        // Add sales
+        SALE_ITEMS.forEach(si => {
             const sale = SALES.find(s => s.id === si.saleId);
             const item = getItem(si.itemId);
             let customerName = 'N/A';
@@ -774,42 +797,126 @@ const Ledger = {
             }
             const lineTotal = si.soldPrice * si.qty;
             const profit = (si.soldPrice - (item ? item.cost : 0)) * si.qty;
-            return { si, sale, item, customerName, customerDetails, lineTotal, profit };
-        }).filter(r => r.customerName !== 'N/A').sort((a, b) => {
-            if (a.sale && b.sale) return b.sale.date.localeCompare(a.sale.date) || b.si.saleId - a.si.saleId;
-            return 0;
+            
+            if (customerName !== 'N/A') {
+                allTransactions.push({
+                    type: 'sale',
+                    id: si.id,
+                    saleId: si.saleId,
+                    date: sale ? sale.date : '',
+                    customerName,
+                    customerDetails,
+                    item,
+                    itemName: item ? item.name : 'N/A',
+                    qty: si.qty,
+                    soldPrice: si.soldPrice,
+                    lineTotal,
+                    profit,
+                    warrantyExpiration: si.warrantyExpiration,
+                    sale,
+                    si
+                });
+            }
+        });
+        
+        // Add returns as negative profit entries
+        RETURNS.forEach(ret => {
+            const item = getItem(ret.itemId);
+            let customerName = 'Walk-in';
+            let customerDetails = null;
+            
+            if (ret.customerData) {
+                customerName = ret.customerData.name;
+                customerDetails = ret.customerData;
+            } else if (ret.customerId) {
+                const customer = getCustomer(ret.customerId);
+                if (customer) {
+                    customerName = customer.name;
+                    customerDetails = customer;
+                }
+            }
+            
+            allTransactions.push({
+                type: 'return',
+                id: ret.id,
+                saleId: ret.saleId,
+                date: ret.date,
+                customerName,
+                customerDetails,
+                item,
+                itemName: ret.itemName,
+                qty: -ret.qty, // Negative quantity for returns
+                soldPrice: ret.soldPrice,
+                lineTotal: -ret.returnedAmount, // Negative amount
+                profit: -ret.profitLoss, // Negative profit impact
+                warrantyExpiration: null,
+                reason: ret.reason,
+                disposition: ret.disposition,
+                returnRecord: ret
+            });
+        });
+        
+        // Sort by date descending
+        allTransactions.sort((a, b) => {
+            const dateCompare = b.date.localeCompare(a.date);
+            if (dateCompare !== 0) return dateCompare;
+            return b.saleId - a.saleId;
         });
 
-        body.innerHTML = rows.map(r => {
-            const warrantyExp = r.si.warrantyExpiration;
-            const warrantyStatus = warrantyExp ? getWarrantyStatus(warrantyExp) : { status: 'N/A', class: '' };
-            return `
-            <tr>
-                <td>${r.si.saleId}</td>
-                <td>${r.sale ? r.sale.date : ''}</td>
-                <td>${r.customerName}</td>
-                <td>${r.item ? r.item.name : 'N/A'}</td>
-                <td>${r.si.qty}</td>
-                <td>${peso(r.si.soldPrice)}</td>
-                <td>${peso(r.lineTotal)}</td>
-                <td style="color: var(--green)">${peso(r.profit)}</td>
-                <td>${warrantyExp ? warrantyExp : 'N/A'}</td>
-                <td><span class="warranty-badge ${warrantyStatus.class}">${warrantyStatus.status}</span></td>
-                <td>
-                    <button class="btn-info-circle" onclick="Ledger.showDetails(${r.si.id})" title="View Details">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                </td>
-            </tr>`;
+        body.innerHTML = allTransactions.map(r => {
+            if (r.type === 'sale') {
+                const warrantyStatus = r.warrantyExpiration ? getWarrantyStatus(r.warrantyExpiration) : { status: 'N/A', class: '' };
+                return `
+                <tr>
+                    <td>${r.saleId}</td>
+                    <td>${r.date}</td>
+                    <td>${r.customerName}</td>
+                    <td>${r.itemName}</td>
+                    <td>${r.qty}</td>
+                    <td>${peso(r.soldPrice)}</td>
+                    <td>${peso(r.lineTotal)}</td>
+                    <td style="color: var(--green)">${peso(r.profit)}</td>
+                    <td>${r.warrantyExpiration || 'N/A'}</td>
+                    <td><span class="warranty-badge ${warrantyStatus.class}">${warrantyStatus.status}</span></td>
+                    <td>
+                        <button class="btn-info-circle" onclick="Ledger.showDetails(${r.id}, 'sale')" title="View Details">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            } else {
+                // Return row
+                return `
+                <tr style="background: rgba(255, 107, 157, 0.05);">
+                    <td>R-${r.id} <span style="font-size:0.7rem;color:var(--text-muted);">(Ref: ${r.saleId})</span></td>
+                    <td>${r.date}</td>
+                    <td>${r.customerName}</td>
+                    <td>${r.itemName} <span style="font-size:0.7rem;color:var(--red);">RETURN</span></td>
+                    <td style="color: var(--red)">${r.qty}</td>
+                    <td>${peso(r.soldPrice)}</td>
+                    <td style="color: var(--red)">${peso(r.lineTotal)}</td>
+                    <td style="color: var(--red); font-weight: 600;">${peso(r.profit)}</td>
+                    <td colspan="2" style="color: var(--text-muted); font-size:0.78rem;">${r.reason} → ${r.disposition}</td>
+                    <td>
+                        <button class="btn-info-circle" onclick="Ledger.showDetails(${r.id}, 'return')" title="View Details">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            }
         }).join('');
     },
 
     filter() {
+        const searchInput = document.getElementById('ledgerSearch').value.toLowerCase().trim();
         const from = document.getElementById('ledgerDateFrom').value;
         const to = document.getElementById('ledgerDateTo').value;
         const body = document.getElementById('ledgerBody');
 
-        const rows = SALE_ITEMS.map(si => {
+        const allTransactions = [];
+        
+        // Add sales
+        SALE_ITEMS.forEach(si => {
             const sale = SALES.find(s => s.id === si.saleId);
             const item = getItem(si.itemId);
             let customerName = 'N/A';
@@ -826,78 +933,210 @@ const Ledger = {
             }
             const lineTotal = si.soldPrice * si.qty;
             const profit = (si.soldPrice - (item ? item.cost : 0)) * si.qty;
-            return { si, sale, item, customerName, customerDetails, lineTotal, profit };
-        }).filter(r => {
-            if (!r.sale) return false;
-            if (r.customerName === 'N/A') return false;
-            if (from && r.sale.date < from) return false;
-            if (to && r.sale.date > to) return false;
+            
+            if (customerName !== 'N/A') {
+                allTransactions.push({
+                    type: 'sale',
+                    id: si.id,
+                    saleId: si.saleId,
+                    date: sale ? sale.date : '',
+                    customerName,
+                    customerDetails,
+                    item,
+                    itemName: item ? item.name : 'N/A',
+                    qty: si.qty,
+                    soldPrice: si.soldPrice,
+                    lineTotal,
+                    profit,
+                    warrantyExpiration: si.warrantyExpiration,
+                    sale,
+                    si
+                });
+            }
+        });
+        
+        // Add returns
+        RETURNS.forEach(ret => {
+            const item = getItem(ret.itemId);
+            let customerName = 'Walk-in';
+            let customerDetails = null;
+            
+            if (ret.customerData) {
+                customerName = ret.customerData.name;
+                customerDetails = ret.customerData;
+            } else if (ret.customerId) {
+                const customer = getCustomer(ret.customerId);
+                if (customer) {
+                    customerName = customer.name;
+                    customerDetails = customer;
+                }
+            }
+            
+            allTransactions.push({
+                type: 'return',
+                id: ret.id,
+                saleId: ret.saleId,
+                date: ret.date,
+                customerName,
+                customerDetails,
+                item,
+                itemName: ret.itemName,
+                qty: -ret.qty,
+                soldPrice: ret.soldPrice,
+                lineTotal: -ret.returnedAmount,
+                profit: -ret.profitLoss,
+                warrantyExpiration: null,
+                reason: ret.reason,
+                disposition: ret.disposition,
+                returnRecord: ret
+            });
+        });
+        
+        // Apply filters
+        const rows = allTransactions.filter(r => {
+            // Text Search filter
+            if (searchInput) {
+                const matchesId = r.saleId.toString() === searchInput;
+                const matchesCustomer = r.customerName.toLowerCase().includes(searchInput);
+                const matchesItem = r.itemName.toLowerCase().includes(searchInput);
+                if (!matchesId && !matchesCustomer && !matchesItem) return false;
+            }
+
+            if (from && r.date < from) return false;
+            if (to && r.date > to) return false;
             return true;
-        }).sort((a, b) => b.sale.date.localeCompare(a.sale.date) || b.si.saleId - a.si.saleId);
+        }).sort((a, b) => {
+            const dateCompare = b.date.localeCompare(a.date);
+            if (dateCompare !== 0) return dateCompare;
+            return b.saleId - a.saleId;
+        });
 
         body.innerHTML = rows.map(r => {
-            const warrantyExp = r.si.warrantyExpiration;
-            const warrantyStatus = warrantyExp ? getWarrantyStatus(warrantyExp) : { status: 'N/A', class: '' };
-            return `
-            <tr>
-                <td>${r.si.saleId}</td>
-                <td>${r.sale.date}</td>
-                <td>${r.customerName}</td>
-                <td>${r.item ? r.item.name : 'N/A'}</td>
-                <td>${r.si.qty}</td>
-                <td>${peso(r.si.soldPrice)}</td>
-                <td>${peso(r.lineTotal)}</td>
-                <td style="color: var(--green)">${peso(r.profit)}</td>
-                <td>${warrantyExp ? warrantyExp : 'N/A'}</td>
-                <td><span class="warranty-badge ${warrantyStatus.class}">${warrantyStatus.status}</span></td>
-                <td>
-                    <button class="btn-info-circle" onclick="Ledger.showDetails(${r.si.id})" title="View Details">
-                        <i class="fas fa-chevron-right"></i>
-                    </button>
-                </td>
-            </tr>`;
+            if (r.type === 'sale') {
+                const warrantyStatus = r.warrantyExpiration ? getWarrantyStatus(r.warrantyExpiration) : { status: 'N/A', class: '' };
+                return `
+                <tr>
+                    <td>${r.saleId}</td>
+                    <td>${r.date}</td>
+                    <td>${r.customerName}</td>
+                    <td>${r.itemName}</td>
+                    <td>${r.qty}</td>
+                    <td>${peso(r.soldPrice)}</td>
+                    <td>${peso(r.lineTotal)}</td>
+                    <td style="color: var(--green)">${peso(r.profit)}</td>
+                    <td>${r.warrantyExpiration || 'N/A'}</td>
+                    <td><span class="warranty-badge ${warrantyStatus.class}">${warrantyStatus.status}</span></td>
+                    <td>
+                        <button class="btn-info-circle" onclick="Ledger.showDetails(${r.id}, 'sale')" title="View Details">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            } else {
+                return `
+                <tr style="background: rgba(255, 107, 157, 0.05);">
+                    <td>R-${r.id} <span style="font-size:0.7rem;color:var(--text-muted);">(Ref: ${r.saleId})</span></td>
+                    <td>${r.date}</td>
+                    <td>${r.customerName}</td>
+                    <td>${r.itemName} <span style="font-size:0.7rem;color:var(--red);">RETURN</span></td>
+                    <td style="color: var(--red)">${r.qty}</td>
+                    <td>${peso(r.soldPrice)}</td>
+                    <td style="color: var(--red)">${peso(r.lineTotal)}</td>
+                    <td style="color: var(--red); font-weight: 600;">${peso(r.profit)}</td>
+                    <td colspan="2" style="color: var(--text-muted); font-size:0.78rem;">${r.reason} → ${r.disposition}</td>
+                    <td>
+                        <button class="btn-info-circle" onclick="Ledger.showDetails(${r.id}, 'return')" title="View Details">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+                    </td>
+                </tr>`;
+            }
         }).join('');
     },
 
-    showDetails(saleItemId) {
-        const si = SALE_ITEMS.find(item => item.id === saleItemId);
-        if (!si) return;
-
-        const sale = SALES.find(s => s.id === si.saleId);
-        const product = getItem(si.itemId);
+    showDetails(id, type) {
+        let content = '';
         
-        let customer = { name: 'Walk-in Customer', phone: 'N/A', email: 'N/A', address: 'N/A' };
-        if (sale) {
-            if (sale.customerData) {
-                customer = sale.customerData;
-            } else {
-                const c = getCustomer(sale.customerId);
+        if (type === 'sale') {
+            const si = SALE_ITEMS.find(item => item.id === id);
+            if (!si) return;
+
+            const sale = SALES.find(s => s.id === si.saleId);
+            const product = getItem(si.itemId);
+            
+            let customer = { name: 'Walk-in Customer', phone: 'N/A', email: 'N/A', address: 'N/A' };
+            if (sale) {
+                if (sale.customerData) {
+                    customer = sale.customerData;
+                } else {
+                    const c = getCustomer(sale.customerId);
+                    if (c) customer = c;
+                }
+            }
+
+            content = `
+                <div class="receipt-line"><span>Sale ID</span><span>#${si.saleId}</span></div>
+                <div class="receipt-line"><span>Date</span><span>${sale ? sale.date : 'N/A'}</span></div>
+                <div class="receipt-line"><span>Product</span><span>${product ? product.name : 'Unknown'}</span></div>
+                <div class="receipt-line"><span>Quantity</span><span>${si.qty} units</span></div>
+                <div class="receipt-line"><span>Unit Price</span><span>${peso(si.soldPrice)}</span></div>
+                <div class="receipt-total"><span>Line Total</span><span>${peso(si.soldPrice * si.qty)}</span></div>
+                
+                <div class="detail-section">
+                    <div class="detail-title">Customer Information</div>
+                    <div class="detail-row"><span class="detail-label">Name</span><span class="detail-value">${customer.name}</span></div>
+                    <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">${customer.phone}</span></div>
+                    <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">${customer.email || 'N/A'}</span></div>
+                    <div class="detail-row"><span class="detail-label">Address</span><span class="detail-value">${customer.address || 'N/A'}</span></div>
+                </div>
+                
+                <div class="detail-section">
+                    <div class="detail-title">Warranty Status</div>
+                    <div class="detail-row"><span class="detail-label">Expires On</span><span class="detail-value">${si.warrantyExpiration || 'N/A'}</span></div>
+                    <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value" style="color:${getWarrantyStatus(si.warrantyExpiration).class === 'warranty-active' ? 'var(--green)' : 'var(--red)'}">${getWarrantyStatus(si.warrantyExpiration).status}</span></div>
+                </div>
+            `;
+        } else if (type === 'return') {
+            const ret = RETURNS.find(r => r.id === id);
+            if (!ret) return;
+            
+            const product = getItem(ret.itemId);
+            let customer = { name: 'Walk-in Customer', phone: 'N/A', email: 'N/A', address: 'N/A' };
+            
+            if (ret.customerData) {
+                customer = ret.customerData;
+            } else if (ret.customerId) {
+                const c = getCustomer(ret.customerId);
                 if (c) customer = c;
             }
+            
+            const dispositionColor = ret.restocked ? 'var(--green)' : 'var(--red)';
+            
+            content = `
+                <div class="receipt-line"><span>Return ID</span><span>#R-${ret.id}</span></div>
+                <div class="receipt-line"><span>Original Sale</span><span>#${ret.saleId}</span></div>
+                <div class="receipt-line"><span>Return Date</span><span>${ret.date}</span></div>
+                <div class="receipt-line"><span>Product</span><span>${ret.itemName}</span></div>
+                <div class="receipt-line"><span>Quantity Returned</span><span style="color:var(--red)">${ret.qty} units</span></div>
+                <div class="receipt-line"><span>Original Price</span><span>${peso(ret.soldPrice)}</span></div>
+                <div class="receipt-total" style="border-top-color: var(--red);"><span>Refund Amount</span><span style="color:var(--red)">${peso(ret.returnedAmount)}</span></div>
+                
+                <div class="detail-section">
+                    <div class="detail-title">Return Information</div>
+                    <div class="detail-row"><span class="detail-label">Reason</span><span class="detail-value">${ret.reason}</span></div>
+                    <div class="detail-row"><span class="detail-label">Disposition</span><span class="detail-value" style="color:${dispositionColor}; font-weight:600;">${ret.disposition}</span></div>
+                    <div class="detail-row"><span class="detail-label">Profit Impact</span><span class="detail-value" style="color:var(--red); font-weight:600;">${peso(ret.profitLoss)}</span></div>
+                </div>
+                
+                <div class="detail-section">
+                    <div class="detail-title">Customer Information</div>
+                    <div class="detail-row"><span class="detail-label">Name</span><span class="detail-value">${customer.name}</span></div>
+                    <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">${customer.phone}</span></div>
+                    <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">${customer.email || 'N/A'}</span></div>
+                    <div class="detail-row"><span class="detail-label">Address</span><span class="detail-value">${customer.address || 'N/A'}</span></div>
+                </div>
+            `;
         }
-
-        const content = `
-            <div class="receipt-line"><span>Sale ID</span><span>#${si.saleId}</span></div>
-            <div class="receipt-line"><span>Date</span><span>${sale ? sale.date : 'N/A'}</span></div>
-            <div class="receipt-line"><span>Product</span><span>${product ? product.name : 'Unknown'}</span></div>
-            <div class="receipt-line"><span>Quantity</span><span>${si.qty} units</span></div>
-            <div class="receipt-line"><span>Unit Price</span><span>${peso(si.soldPrice)}</span></div>
-            <div class="receipt-total"><span>Line Total</span><span>${peso(si.soldPrice * si.qty)}</span></div>
-            
-            <div class="detail-section">
-                <div class="detail-title">Customer Information</div>
-                <div class="detail-row"><span class="detail-label">Name</span><span class="detail-value">${customer.name}</span></div>
-                <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">${customer.phone}</span></div>
-                <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">${customer.email || 'N/A'}</span></div>
-                <div class="detail-row"><span class="detail-label">Address</span><span class="detail-value">${customer.address || 'N/A'}</span></div>
-            </div>
-            
-            <div class="detail-section">
-                <div class="detail-title">Warranty Status</div>
-                <div class="detail-row"><span class="detail-label">Expires On</span><span class="detail-value">${si.warrantyExpiration || 'N/A'}</span></div>
-                <div class="detail-row"><span class="detail-label">Status</span><span class="detail-value" style="color:${getWarrantyStatus(si.warrantyExpiration).class === 'warranty-active' ? 'var(--green)' : 'var(--red)'}">${getWarrantyStatus(si.warrantyExpiration).status}</span></div>
-            </div>
-        `;
 
         document.getElementById('saleDetailsContent').innerHTML = content;
         document.getElementById('saleDetailsModal').classList.add('show');
@@ -984,24 +1223,55 @@ const Returns = {
             return;
         }
 
-        // Restock inventory (simulates trigger trg_restock_after_return)
         const item = getItem(saleItem.itemId);
-        if (item) {
-            item.qty += qty;
+        const sale = SALES.find(s => s.id === saleId);
+        
+        // Determine disposition based on reason
+        let disposition = '';
+        let restocked = false;
+        
+        if (reason === 'Defective') {
+            disposition = 'Defective Bin';
+            restocked = false;
+            // Defective items do NOT return to inventory
+        } else {
+            disposition = 'Returned to Stock';
+            restocked = true;
+            // Restock inventory for non-defective returns
+            if (item) {
+                item.qty += qty;
+            }
         }
 
-        // Record return
-        RETURNS.push({
+        // Calculate return impact on profit
+        const returnedAmount = saleItem.soldPrice * qty;
+        const returnedCost = (item ? item.cost : 0) * qty;
+        const profitLoss = returnedAmount - returnedCost;
+
+        // Record return with full details
+        const returnRecord = {
             id: nextReturnId++,
             saleId,
             saleItemId,
+            itemId: saleItem.itemId,
             itemName: item ? item.name : 'Unknown',
             qty,
+            soldPrice: saleItem.soldPrice,
+            returnedAmount,
+            profitLoss,
             reason,
+            disposition,
+            restocked,
+            date: new Date().toISOString().slice(0, 10),
+            customerData: sale?.customerData || null,
+            customerId: sale?.customerId || 0,
             status: 'Approved'
-        });
+        };
+        
+        RETURNS.push(returnRecord);
 
-        showToast(`Return processed — ${qty} x ${item ? item.name : 'item'} restocked`, 'success');
+        const restockMsg = restocked ? 'restocked' : 'sent to defective bin';
+        showToast(`Return processed — ${qty} x ${item ? item.name : 'item'} ${restockMsg}`, 'success');
 
         // Reset form
         document.getElementById('returnSaleId').value = '';
@@ -1014,6 +1284,7 @@ const Returns = {
 
         this.renderHistory();
         Dashboard.init();
+        Ledger.init();
         Inventory.render();
         POS.renderProducts();
     },
@@ -1021,18 +1292,23 @@ const Returns = {
     renderHistory() {
         const body = document.getElementById('returnsBody');
         if (RETURNS.length === 0) {
-            body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:24px;">No returns recorded yet</td></tr>';
+            body.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:24px;">No returns recorded yet</td></tr>';
             return;
         }
-        body.innerHTML = RETURNS.map(r => `
+        body.innerHTML = RETURNS.map(r => {
+            const dispositionColor = r.restocked ? 'var(--green)' : 'var(--red)';
+            return `
             <tr>
                 <td>${r.id}</td>
                 <td>${r.saleId}</td>
                 <td>${r.itemName}</td>
                 <td>${r.qty}</td>
                 <td>${r.reason}</td>
+                <td style="color: ${dispositionColor}; font-weight: 600;">${r.disposition}</td>
+                <td style="color: var(--red)">${peso(r.profitLoss)}</td>
                 <td><span class="badge badge-approved">${r.status}</span></td>
-            </tr>`).join('');
+            </tr>`;
+        }).join('');
     }
 };
 
