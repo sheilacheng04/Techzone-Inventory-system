@@ -1,0 +1,365 @@
+{
+  "MONGODB_COLLECTIONS": {
+    "ANALYTICS": {
+      "daily_sales_summary": {
+        "description": "Daily aggregated sales metrics",
+        "schema": {
+          "_id": { "type": "ObjectId", "required": true },
+          "date": { "type": "string", "format": "YYYY-MM-DD", "required": true },
+          "total_sales": { "type": "number", "decimal": true },
+          "total_profit": { "type": "number", "decimal": true },
+          "transactions_count": { "type": "integer" },
+          "total_items_sold": { "type": "integer" },
+          "average_transaction_value": { "type": "number", "decimal": true },
+          "created_at": { "type": "date" },
+          "updated_at": { "type": "date" }
+        },
+        "example": {
+          "date": "2025-02-16",
+          "total_sales": 145000,
+          "total_profit": 45000,
+          "transactions_count": 12,
+          "total_items_sold": 35,
+          "average_transaction_value": 12083.33
+        }
+      },
+      "city_sales_analytics": {
+        "description": "Geographic sales performance tracking",
+        "schema": {
+          "_id": { "type": "ObjectId", "required": true, "unique": true },
+          "city": { "type": "string", "required": true, "unique": true },
+          "total_customers": { "type": "integer" },
+          "total_sales_amount": { "type": "number", "decimal": true },
+          "total_transactions": { "type": "integer" },
+          "total_items_sold": { "type": "integer" },
+          "total_profit": { "type": "number", "decimal": true },
+          "most_purchased_item": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "quantity": { "type": "integer" }
+            }
+          },
+          "penetration_rate": { "type": "number", "min": 0, "max": 1 },
+          "customer_satisfaction": { "type": "number", "min": 1, "max": 5 },
+          "created_at": { "type": "date" },
+          "updated_at": { "type": "date" }
+        }
+      },
+      "customer_analytics": {
+        "description": "Individual customer insights and lifetime value",
+        "schema": {
+          "_id": { "type": "ObjectId", "required": true },
+          "name": { "type": "string", "required": true },
+          "city": { "type": "string" },
+          "phone": { "type": "string", "unique": true },
+          "email": { "type": "string" },
+          "total_orders": { "type": "integer" },
+          "total_spent": { "type": "number", "decimal": true },
+          "total_profit_generated": { "type": "number", "decimal": true },
+          "last_purchase_date": { "type": "string", "format": "YYYY-MM-DD" },
+          "first_purchase_date": { "type": "string", "format": "YYYY-MM-DD" },
+          "favorite_item_type": { "type": "string" },
+          "favorite_products": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "item_id": { "type": "integer" },
+                "item_name": { "type": "string" },
+                "purchases": { "type": "integer" }
+              }
+            }
+          },
+          "average_order_value": { "type": "number", "decimal": true },
+          "purchase_frequency_days": { "type": "integer" },
+          "customer_segment": { "type": "string", "enum": ["VIP", "Regular", "At-Risk"] },
+          "loyalty_score": { "type": "integer" },
+          "created_at": { "type": "date" },
+          "updated_at": { "type": "date" }
+        }
+      },
+      "item_performance_analytics": {
+        "description": "Product/SKU performance metrics",
+        "schema": {
+          "_id": { "type": "ObjectId", "required": true },
+          "item_id": { "type": "integer", "required": true, "unique": true },
+          "name": { "type": "string", "required": true },
+          "type": { "type": "string" },
+          "supplier_id": { "type": "integer" },
+          "supplier_name": { "type": "string" },
+          "total_quantity_sold": { "type": "integer" },
+          "total_revenue": { "type": "number", "decimal": true },
+          "total_profit": { "type": "number", "decimal": true },
+          "profit_margin": { "type": "number", "decimal": true, "min": 0, "max": 1 },
+          "return_rate": { "type": "number", "decimal": true, "min": 0, "max": 1 },
+          "damage_rate": { "type": "number", "decimal": true, "min": 0, "max": 1 },
+          "performance_rating": { "type": "string", "enum": ["Excellent", "Good", "Fair", "Poor"] },
+          "inventory_turnover": { "type": "number", "decimal": true },
+          "days_in_inventory": { "type": "integer" },
+          "current_stock": { "type": "integer" },
+          "reorder_point": { "type": "integer" },
+          "reorder_quantity": { "type": "integer" },
+          "cost_per_unit": { "type": "number", "decimal": true },
+          "selling_price": { "type": "number", "decimal": true },
+          "elasticity": { "type": "number", "decimal": true },
+          "created_at": { "type": "date" },
+          "updated_at": { "type": "date" }
+        }
+      },
+      "inventory_health_analytics": {
+        "description": "Overall inventory and supply chain health",
+        "schema": {
+          "_id": { "type": "ObjectId", "required": true },
+          "analysis_date": { "type": "string", "format": "YYYY-MM-DD" },
+          "total_items": { "type": "integer" },
+          "stock_status": {
+            "type": "object",
+            "properties": {
+              "in_stock": { "type": "integer" },
+              "low_stock": { "type": "integer" },
+              "out_of_stock": { "type": "integer" }
+            }
+          },
+          "total_inventory_value": { "type": "number", "decimal": true },
+          "total_inventory_retail": { "type": "number", "decimal": true },
+          "average_inventory_age": { "type": "integer" },
+          "slow_moving_items": { "type": "integer" },
+          "dead_stock_value": { "type": "number", "decimal": true },
+          "stockout_incidents": { "type": "integer" },
+          "overstock_items": { "type": "integer" },
+          "inventory_accuracy": { "type": "number", "decimal": true, "min": 0, "max": 1 },
+          "carrying_cost_total": { "type": "number", "decimal": true },
+          "created_at": { "type": "date" }
+        }
+      },
+      "financial_snapshots": {
+        "description": "Financial health business snapshots",
+        "schema": {
+          "_id": { "type": "ObjectId", "required": true },
+          "snapshot_date": { "type": "string", "format": "YYYY-MM-DD" },
+          "snapshot_period": { "type": "string", "enum": ["daily", "weekly", "monthly"] },
+          "gross_sales": { "type": "number", "decimal": true },
+          "total_returns": { "type": "number", "decimal": true },
+          "damaged_stock_loss": { "type": "number", "decimal": true },
+          "net_sales": { "type": "number", "decimal": true },
+          "cost_of_goods_sold": { "type": "number", "decimal": true },
+          "net_profit": { "type": "number", "decimal": true },
+          "profit_margin": { "type": "number", "decimal": true },
+          "roi": { "type": "number", "decimal": true },
+          "top_city": { "type": "string" },
+          "top_item": { "type": "string" },
+          "top_customer": { "type": "string" },
+          "low_stock_count": { "type": "integer" },
+          "cash_position": { "type": "number", "decimal": true },
+          "accounts_receivable": { "type": "number", "decimal": true },
+          "inventory_turnover_ratio": { "type": "number", "decimal": true },
+          "current_ratio": { "type": "number", "decimal": true },
+          "created_at": { "type": "date" }
+        }
+      },
+      "supplier_analytics": {
+        "description": "Supplier performance and reliability tracking",
+        "schema": {
+          "_id": { "type": "ObjectId", "required": true },
+          "supplier_id": { "type": "integer", "required": true, "unique": true },
+          "supplier_name": { "type": "string" },
+          "contact": { "type": "string" },
+          "total_orders": { "type": "integer" },
+          "total_purchase_value": { "type": "number", "decimal": true },
+          "total_items_supplied": { "type": "integer" },
+          "average_order_value": { "type": "number", "decimal": true },
+          "on_time_delivery_rate": { "type": "number", "decimal": true, "min": 0, "max": 1 },
+          "quality_rating": { "type": "number", "decimal": true, "min": 1, "max": 5 },
+          "defect_rate": { "type": "number", "decimal": true, "min": 0, "max": 1 },
+          "lead_time_days": { "type": "integer" },
+          "payment_terms": { "type": "string" },
+          "reliability_score": { "type": "integer", "min": 0, "max": 100 },
+          "products_supplied": { "type": "integer" },
+          "most_supplied_item": { "type": "string" },
+          "average_quantity_per_order": { "type": "number", "decimal": true },
+          "created_at": { "type": "date" },
+          "updated_at": { "type": "date" }
+        }
+      },
+      "city_customer_distribution": {
+        "description": "Customer demographics by city",
+        "schema": {
+          "_id": { "type": "ObjectId", "required": true },
+          "city": { "type": "string", "unique": true },
+          "total_customers": { "type": "integer" },
+          "customer_segments": {
+            "type": "object",
+            "properties": {
+              "retail": { "type": "integer" },
+              "wholesale": { "type": "integer" },
+              "corporate": { "type": "integer" }
+            }
+          },
+          "average_purchase_value": { "type": "number", "decimal": true },
+          "repeat_customer_rate": { "type": "number", "decimal": true, "min": 0, "max": 1 },
+          "customer_lifetime_value": { "type": "number", "decimal": true },
+          "churn_rate": { "type": "number", "decimal": true, "min": 0, "max": 1 },
+          "acquisition_cost": { "type": "number", "decimal": true },
+          "created_at": { "type": "date" },
+          "updated_at": { "type": "date" }
+        }
+      }
+    },
+    "LOGS": {
+      "sales_logs": {
+        "description": "Complete transaction records for all sales",
+        "schema": {
+          "_id": { "type": "ObjectId", "required": true },
+          "sale_id": { "type": "integer", "required": true, "unique": true },
+          "sale_date": { "type": "string", "format": "YYYY-MM-DD" },
+          "customer": {
+            "type": "object",
+            "required": true,
+            "properties": {
+              "customer_id": { "type": "integer" },
+              "name": { "type": "string", "required": true },
+              "phone": { "type": "string" },
+              "email": { "type": "string" },
+              "city": { "type": "string" }
+            }
+          },
+          "items": {
+            "type": "array",
+            "required": true,
+            "items": {
+              "type": "object",
+              "properties": {
+                "item_id": { "type": "integer", "required": true },
+                "item_name": { "type": "string", "required": true },
+                "quantity": { "type": "integer", "required": true },
+                "unit_price": { "type": "number", "decimal": true },
+                "line_total": { "type": "number", "decimal": true },
+                "cost": { "type": "number", "decimal": true },
+                "profit": { "type": "number", "decimal": true }
+              }
+            }
+          },
+          "total_amount": { "type": "number", "decimal": true, "required": true },
+          "total_cost": { "type": "number", "decimal": true },
+          "total_profit": { "type": "number", "decimal": true },
+          "payment_method": { "type": "string", "enum": ["Cash", "Credit Card", "Bank Transfer", "Check"] },
+          "payment_status": { "type": "string", "enum": ["Paid", "Pending", "Failed"] },
+          "processed_by": { "type": "string", "required": true },
+          "location": { "type": "string" },
+          "discount_applied": { "type": "number", "decimal": true },
+          "tax_amount": { "type": "number", "decimal": true },
+          "created_at": { "type": "date" },
+          "updated_at": { "type": "date" }
+        }
+      },
+      "inventory_logs": {
+        "description": "Stock movement tracking and audit trail",
+        "schema": {
+          "_id": { "type": "ObjectId", "required": true },
+          "log_id": { "type": "integer", "required": true, "unique": true },
+          "action": {
+            "type": "string",
+            "required": true,
+            "enum": ["SALE", "RESTOCK", "PRODUCT_ADDED", "PRODUCT_UPDATED", "DAMAGE", "ADJUSTMENT", "RETURN"]
+          },
+          "item_id": { "type": "integer", "required": true },
+          "item_name": { "type": "string", "required": true },
+          "quantity_change": { "type": "integer", "required": true },
+          "previous_stock": { "type": "integer", "required": true },
+          "new_stock": { "type": "integer", "required": true },
+          "performed_by": { "type": "string", "required": true },
+          "reference": { "type": "string", "required": true },
+          "reference_type": { "type": "string", "enum": ["Sale", "Restock", "Damage", "Adjustment", "Return"] },
+          "notes": { "type": "string" },
+          "reason_code": { "type": "string", "enum": ["SOLD", "RECEIVED", "DAMAGED", "LOST", "RETURNED", "COUNTED", "ADJUSTMENT"] },
+          "warehouse_location": { "type": "string" },
+          "unit_cost": { "type": "number", "decimal": true },
+          "total_value_change": { "type": "number", "decimal": true },
+          "created_at": { "type": "date" }
+        }
+      },
+      "return_logs": {
+        "description": "Product returns and warranty claim tracking",
+        "schema": {
+          "_id": { "type": "ObjectId", "required": true },
+          "return_id": { "type": "integer", "required": true, "unique": true },
+          "return_date": { "type": "string", "format": "YYYY-MM-DD" },
+          "original_sale_id": { "type": "integer" },
+          "customer": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "phone": { "type": "string" },
+              "city": { "type": "string" }
+            }
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "item_id": { "type": "integer" },
+                "item_name": { "type": "string" },
+                "quantity_returned": { "type": "integer" },
+                "original_price": { "type": "number", "decimal": true },
+                "return_reason": { "type": "string", "enum": ["Defective", "Wrong Item", "Changed Mind", "Damaged"] },
+                "condition": { "type": "string", "enum": ["New", "Like-New", "Good", "Fair", "Poor"] },
+                "refund_amount": { "type": "number", "decimal": true }
+              }
+            }
+          },
+          "total_return_value": { "type": "number", "decimal": true },
+          "refund_status": { "type": "string", "enum": ["Requested", "Approved", "Rejected", "Processed"] },
+          "refund_method": { "type": "string", "enum": ["Cash", "Credit Card", "Bank Transfer"] },
+          "restocked": { "type": "boolean" },
+          "processed_by": { "type": "string" },
+          "notes": { "type": "string" },
+          "created_at": { "type": "date" },
+          "updated_at": { "type": "date" }
+        }
+      },
+      "system_activity_logs": {
+        "description": "Unified activity log across all modules",
+        "schema": {
+          "_id": { "type": "ObjectId", "required": true },
+          "activity_id": { "type": "integer", "required": true, "unique": true },
+          "user_id": { "type": "integer", "required": true },
+          "username": { "type": "string", "required": true },
+          "role": { "type": "string", "required": true },
+          "action": {
+            "type": "string",
+            "required": true,
+            "enum": [
+              "PROCESS_SALE",
+              "ADD_PRODUCT",
+              "UPDATE_PRODUCT",
+              "RESTOCK",
+              "PROCESS_RETURN",
+              "INVENTORY_AUTO_UPDATE",
+              "LOGIN",
+              "LOGOUT"
+            ]
+          },
+          "reference_id": { "type": "integer" },
+          "reference_type": { "type": "string", "enum": ["Sale", "Product", "Inventory", "Return", "User"] },
+          "details": { "type": "string", "required": true },
+          "ip_address": { "type": "string" },
+          "device_info": { "type": "string" },
+          "change_log": {
+            "type": "object",
+            "properties": {
+              "field": { "type": "string" },
+              "old_value": { "type": "any" },
+              "new_value": { "type": "any" }
+            }
+          },
+          "status": { "type": "string", "enum": ["Success", "Pending", "Failed"] },
+          "error_message": { "type": "string" },
+          "created_at": { "type": "date" },
+          "timestamp": { "type": "integer" }
+        }
+      }
+    }
+  }
+}
