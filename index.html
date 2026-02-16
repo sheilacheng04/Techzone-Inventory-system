@@ -44,6 +44,9 @@
                 <li class="nav-item" data-view="returns">
                     <i class="fas fa-rotate-left"></i><span>Returns</span>
                 </li>
+                <li class="nav-item" data-view="activity-log">
+                    <i class="fas fa-satellite-dish"></i><span>Activity Log</span>
+                </li>
             </ul>
             <div class="sidebar-footer">
                 <small>&copy; 2026 TechZone</small>
@@ -97,6 +100,22 @@
                     <div class="card-body" id="alertsList"></div>
                 </div>
 
+                <!-- ===== BUSINESS OVERVIEW ===== -->
+                <h3 class="section-divider"><i class="fas fa-briefcase"></i> Business Overview</h3>
+                
+                <!-- Financial Snapshot -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-line"></i> Financial Health Snapshot</h3>
+                        <span class="badge badge-ok" style="font-size:.68rem;">MongoDB &middot; financial_snapshots</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="financialSnapshotBody">
+                            <div style="text-align:center;color:var(--text-muted);padding:24px;">Loading financial data...</div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Profit Engine -->
                 <div class="card">
                     <div class="card-header">
@@ -114,27 +133,116 @@
                     </div>
                 </div>
 
-                <!-- Top Products -->
+                <!-- ===== SALES PERFORMANCE ===== -->
+                <h3 class="section-divider"><i class="fas fa-chart-area"></i> Sales Performance</h3>
+
+                <!-- Daily Sales Summary Cards -->
+                <div id="dailySalesCards" class="analytics-grid">
+                    <div style="text-align:center;color:var(--text-muted);padding:24px;">Loading daily sales...</div>
+                </div>
+
+                <!-- Daily Sales Trends Table -->
                 <div class="card">
-                    <div class="card-header"><h3><i class="fas fa-trophy"></i> Top Selling Products</h3></div>
+                    <div class="card-header">
+                        <h3><i class="fas fa-table"></i> Daily Sales Details</h3>
+                        <span class="badge badge-ok" style="font-size:.68rem;">MongoDB &middot; daily_sales_summary</span>
+                    </div>
                     <div class="card-body table-responsive">
-                        <table class="data-table">
+                        <table class="data-table compact-table">
                             <thead>
-                                <tr><th>Product</th><th>Units Sold</th><th>Revenue</th><th>Profit</th></tr>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Sales</th>
+                                    <th>Profit</th>
+                                    <th>Transactions</th>
+                                    <th>Items Sold</th>
+                                    <th>Avg Transaction</th>
+                                </tr>
                             </thead>
-                            <tbody id="topProductsBody"></tbody>
+                            <tbody id="dailySalesBody"></tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- System Activity Feed (system_activity_logs — last 5) -->
+                <!-- ===== PRODUCT INSIGHTS ===== -->
+                <h3 class="section-divider"><i class="fas fa-box-open"></i> Product Insights</h3>
+
+                <!-- Product Performance Visual -->
                 <div class="card">
                     <div class="card-header">
-                        <h3><i class="fas fa-satellite-dish"></i> System Activity Feed</h3>
-                        <span class="badge badge-ok" style="font-size:.68rem;">LIVE &middot; Last 5</span>
+                        <h3><i class="fas fa-chart-bar"></i> Top Performing Products</h3>
+                        <span class="badge badge-ok" style="font-size:.68rem;">Live Data</span>
                     </div>
-                    <div class="card-body" id="activityFeedBody">
-                        <div style="text-align:center;color:var(--text-muted);padding:24px;">Loading activity...</div>
+                    <div class="card-body">
+                        <div id="topProductsChart"></div>
+                    </div>
+                </div>
+
+                <!-- Product Performance Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-table"></i> Product Analytics Details</h3>
+                        <span class="badge badge-ok" style="font-size:.68rem;">MongoDB &middot; item_performance_analytics</span>
+                    </div>
+                    <div class="card-body table-responsive">
+                        <table class="data-table compact-table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Category</th>
+                                    <th>Qty Sold</th>
+                                    <th>Revenue</th>
+                                    <th>Profit</th>
+                                    <th>Return Rate</th>
+                                    <th>Damage Rate</th>
+                                    <th>Performance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemPerformanceBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ===== GEOGRAPHIC & CUSTOMER INSIGHTS ===== -->
+                <h3 class="section-divider"><i class="fas fa-users"></i> Geographic & Customer Insights</h3>
+
+                <!-- City Performance Cards -->
+                <div id="cityPerformanceCards" class="analytics-grid">
+                    <div style="text-align:center;color:var(--text-muted);padding:24px;">Loading city data...</div>
+                </div>
+
+                <!-- Geographic Performance Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-map-marked-alt"></i> City Performance Details</h3>
+                        <span class="badge badge-ok" style="font-size:.68rem;">MongoDB &middot; city_sales_analytics</span>
+                    </div>
+                    <div class="card-body table-responsive">
+                        <table class="data-table compact-table">
+                            <thead>
+                                <tr>
+                                    <th>City</th>
+                                    <th>Customers</th>
+                                    <th>Total Sales</th>
+                                    <th>Transactions</th>
+                                    <th>Items Sold</th>
+                                    <th>Profit</th>
+                                    <th>Top Product</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cityAnalyticsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Top Customers Visual -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-user-tie"></i> Top Customers by Lifetime Value</h3>
+                        <span class="badge badge-ok" style="font-size:.68rem;">MongoDB &middot; customer_analytics</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="topCustomersChart"></div>
                     </div>
                 </div>
             </section>
@@ -196,8 +304,8 @@
                                     <input type="email" id="customerEmail" class="input-text" placeholder="Email (optional)">
                                 </div>
                                 <div class="form-group">
-                                    <label>Address</label>
-                                    <input type="text" id="customerAddress" class="input-text" placeholder="Address (optional)">
+                                    <label>City</label>
+                                    <input type="text" id="customerCity" class="input-text" placeholder="City (optional)">
                                 </div>
                             </div>
                             <div class="form-row">
@@ -556,6 +664,77 @@
                             </thead>
                             <tbody id="returnLogsBody"></tbody>
                         </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ SYSTEM ACTIVITY LOG VIEW ============ -->
+            <section class="view" id="view-activity-log">
+                <h2 class="view-title"><i class="fas fa-satellite-dish"></i> System Activity Log</h2>
+                
+                <div class="acid-banner">
+                    <i class="fas fa-database"></i>
+                    <div>
+                        <strong>Real-Time Activity Monitoring</strong>
+                        <p>Track all system operations including sales, inventory changes, returns, and user actions. Monitor your business activity in real-time.</p>
+                    </div>
+                </div>
+
+                <!-- Activity Statistics -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-pie"></i> Activity Summary</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="activity-stats-grid">
+                            <div class="activity-stat-card">
+                                <div class="activity-stat-icon" style="background:rgba(76,175,80,0.1);color:var(--green);">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <div class="activity-stat-info">
+                                    <span class="activity-stat-label">Sales Processed</span>
+                                    <span class="activity-stat-value" id="activitySalesCount">0</span>
+                                </div>
+                            </div>
+                            <div class="activity-stat-card">
+                                <div class="activity-stat-icon" style="background:rgba(33,150,243,0.1);color:var(--blue);">
+                                    <i class="fas fa-boxes-stacked"></i>
+                                </div>
+                                <div class="activity-stat-info">
+                                    <span class="activity-stat-label">Inventory Updates</span>
+                                    <span class="activity-stat-value" id="activityInventoryCount">0</span>
+                                </div>
+                            </div>
+                            <div class="activity-stat-card">
+                                <div class="activity-stat-icon" style="background:rgba(255,152,0,0.1);color:var(--orange);">
+                                    <i class="fas fa-rotate-left"></i>
+                                </div>
+                                <div class="activity-stat-info">
+                                    <span class="activity-stat-label">Returns Processed</span>
+                                    <span class="activity-stat-value" id="activityReturnsCount">0</span>
+                                </div>
+                            </div>
+                            <div class="activity-stat-card">
+                                <div class="activity-stat-icon" style="background:rgba(108,92,231,0.1);color:var(--accent);">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="activity-stat-info">
+                                    <span class="activity-stat-label">Total Activities</span>
+                                    <span class="activity-stat-value" id="activityTotalCount">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Feed -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-stream"></i> Recent System Activity</h3>
+                        <span class="badge badge-ok" style="font-size:.68rem;">LIVE &middot; MongoDB &middot; system_activity_logs</span>
+                    </div>
+                    <div class="card-body" id="activityFeedBody">
+                        <div style="text-align:center;color:var(--text-muted);padding:24px;">Loading activity...</div>
                     </div>
                 </div>
             </section>

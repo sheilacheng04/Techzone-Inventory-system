@@ -54,13 +54,7 @@ const SUPPLIERS = [
     { id: 12, name: 'Creative', contact: '02-8888-8888' },
 ];
 
-const CUSTOMERS = [
-    { id: 1, name: 'Juan Dela Cruz', phone: '0917-111-2222', email: 'juan.dc@gmail.com', address: 'Quezon City' },
-    { id: 2, name: 'Maria Santos', phone: '0918-222-3333', email: 'maria.santos@yahoo.com', address: 'Makati City' },
-    { id: 3, name: 'Jose Rizal', phone: '0919-333-4444', email: 'j.rizal@gmail.com', address: 'Manila' },
-    { id: 4, name: 'Andres Bonifacio', phone: '0920-444-5555', email: 'a.boni@yahoo.com', address: 'Tondo, Manila' },
-    { id: 5, name: 'Emilio Aguinaldo', phone: '0921-555-6666', email: 'e.agui@gmail.com', address: 'Cavite' },
-];
+const CUSTOMERS = [];
 
 // Walk-in customers (customers stored from previous sales)
 const WALK_IN_CUSTOMERS = [];
@@ -118,16 +112,14 @@ function calculateWarrantyExpiration(saleDate, warrantyDays) {
     ];
     const saleCustomers = [1, 2, 3, 4, 5];
 
-    for (let i = 0; i < 5; i++) {
-        SALES.push({ id: i + 1, date: saleDates[i], customerId: saleCustomers[i] });
-    }
+    // Don't add dummy sales — start with empty SALES array for fresh data
+    // Users will create sales through POS transactions
+    // for (let i = 0; i < 5; i++) {
+    //     SALES.push({ id: i + 1, date: saleDates[i], customerId: saleCustomers[i] });
+    // }
 
     const saleItemsRaw = [
-        [1,1,1,8500],
-        [2,2,1,18500],
-        [3,3,2,1500],
-        [4,4,1,995],
-        [5,5,1,7500]
+
     ];
     saleItemsRaw.forEach((r, i) => {
         const saleId = r[0];
@@ -161,365 +153,42 @@ let nextReturnId = 1;
 // ========== MONGODB LOG COLLECTIONS (Simulated) ==========
 
 // --- inventory_logs: tracks every stock movement ---
-const INVENTORY_LOGS = [
-    {
-        _id: 'invlog_001',
-        timestamp: new Date('2025-01-15T08:00:00Z'),
-        action: 'RESTOCK',
-        item_id: parseInt(1),
-        item_name: 'Ryzen 5 5600',
-        quantity_change: Number(50),
-        previous_stock: Number(0),
-        new_stock: Number(50),
-        performed_by: 'admin',
-        reference: 'PO-2025-001',
-        notes: 'Initial batch from AMD Phil'
-    },
-    {
-        _id: 'invlog_002',
-        timestamp: new Date('2025-01-15T08:15:00Z'),
-        action: 'RESTOCK',
-        item_id: parseInt(2),
-        item_name: 'RTX 4060',
-        quantity_change: Number(25),
-        previous_stock: Number(0),
-        new_stock: Number(25),
-        performed_by: 'admin',
-        reference: 'PO-2025-002',
-        notes: 'Initial batch from Asus Ph'
-    },
-    {
-        _id: 'invlog_003',
-        timestamp: new Date('2025-01-15T08:30:00Z'),
-        action: 'RESTOCK',
-        item_id: parseInt(3),
-        item_name: '8GB DDR4 RAM',
-        quantity_change: Number(100),
-        previous_stock: Number(0),
-        new_stock: Number(100),
-        performed_by: 'admin',
-        reference: 'PO-2025-003',
-        notes: 'Bulk restock from Kingston D.'
-    },
-    {
-        _id: 'invlog_004',
-        timestamp: new Date('2025-01-15T14:12:00Z'),
-        action: 'SALE',
-        item_id: parseInt(1),
-        item_name: 'Ryzen 5 5600',
-        quantity_change: Number(-1),
-        previous_stock: Number(50),
-        new_stock: Number(49),
-        performed_by: 'cashier_01',
-        reference: 'SALE-001',
-        notes: 'Sold to Juan Dela Cruz'
-    },
-    {
-        _id: 'invlog_005',
-        timestamp: new Date('2025-01-15T15:30:00Z'),
-        action: 'SALE',
-        item_id: parseInt(2),
-        item_name: 'RTX 4060',
-        quantity_change: Number(-1),
-        previous_stock: Number(25),
-        new_stock: Number(24),
-        performed_by: 'cashier_01',
-        reference: 'SALE-002',
-        notes: 'Sold to Maria Santos'
-    },
-    {
-        _id: 'invlog_006',
-        timestamp: new Date('2025-01-16T09:00:00Z'),
-        action: 'SALE',
-        item_id: parseInt(3),
-        item_name: '8GB DDR4 RAM',
-        quantity_change: Number(-2),
-        previous_stock: Number(100),
-        new_stock: Number(98),
-        performed_by: 'cashier_02',
-        reference: 'SALE-003',
-        notes: 'Sold 2 units to Jose Rizal'
-    },
-    {
-        _id: 'invlog_007',
-        timestamp: new Date('2025-01-20T11:00:00Z'),
-        action: 'RETURN',
-        item_id: parseInt(2),
-        item_name: 'RTX 4060',
-        quantity_change: Number(0),
-        previous_stock: Number(24),
-        new_stock: Number(24),
-        performed_by: 'manager_01',
-        reference: 'RETURN-001',
-        notes: 'Return from sale #2 - Defective, sent to defective bin'
-    },
-    {
-        _id: 'invlog_008',
-        timestamp: new Date('2025-01-22T14:30:00Z'),
-        action: 'RETURN',
-        item_id: parseInt(3),
-        item_name: '8GB DDR4 RAM',
-        quantity_change: Number(1),
-        previous_stock: Number(98),
-        new_stock: Number(99),
-        performed_by: 'manager_01',
-        reference: 'RETURN-002',
-        notes: 'Return from sale #3 - Wrong item, restocked'
-    },
-    {
-        _id: 'invlog_009',
-        timestamp: new Date('2025-01-25T16:15:00Z'),
-        action: 'RETURN',
-        item_id: parseInt(1),
-        item_name: 'Ryzen 5 5600',
-        quantity_change: Number(1),
-        previous_stock: Number(49),
-        new_stock: Number(50),
-        performed_by: 'admin',
-        reference: 'RETURN-003',
-        notes: 'Return from sale #1 - Change of mind, restocked'
-    }
-];
+const INVENTORY_LOGS = [];
 
 // --- sales_logs: full sale records with nested customer & items ---
-const SALES_LOGS = [
-    {
-        _id: 'salelog_001',
-        timestamp: new Date('2025-01-15T14:12:00Z'),
-        sale_id: parseInt(1),
-        transaction_type: 'SALE',
-        customer: {
-            customer_id: parseInt(1),
-            name: 'Juan Dela Cruz',
-            phone: '0917-111-2222',
-            email: 'juan.dc@gmail.com',
-            city: 'Quezon City'
-        },
-        items: [
-            {
-                item_id: parseInt(1),
-                item_name: 'Ryzen 5 5600',
-                quantity: parseInt(1),
-                unit_price: Number(8500),
-                line_total: Number(8500),
-                cost: Number(6500),
-                profit: Number(2000)
-            }
-        ],
-        total_amount: Number(8500),
-        total_profit: Number(2000),
-        payment_method: 'Cash',
-        processed_by: 'cashier_01'
-    },
-    {
-        _id: 'salelog_002',
-        timestamp: new Date('2025-01-15T15:30:00Z'),
-        sale_id: parseInt(2),
-        transaction_type: 'SALE',
-        customer: {
-            customer_id: parseInt(2),
-            name: 'Maria Santos',
-            phone: '0918-222-3333',
-            email: 'maria.santos@yahoo.com',
-            city: 'Makati City'
-        },
-        items: [
-            {
-                item_id: parseInt(2),
-                item_name: 'RTX 4060',
-                quantity: parseInt(1),
-                unit_price: Number(18500),
-                line_total: Number(18500),
-                cost: Number(16000),
-                profit: Number(2500)
-            }
-        ],
-        total_amount: Number(18500),
-        total_profit: Number(2500),
-        payment_method: 'Card',
-        processed_by: 'cashier_01'
-    },
-    {
-        _id: 'salelog_003',
-        timestamp: new Date('2025-01-16T09:00:00Z'),
-        sale_id: parseInt(3),
-        transaction_type: 'SALE',
-        customer: {
-            customer_id: parseInt(3),
-            name: 'Jose Rizal',
-            phone: '0919-333-4444',
-            email: 'j.rizal@gmail.com',
-            city: 'Manila'
-        },
-        items: [
-            {
-                item_id: parseInt(3),
-                item_name: '8GB DDR4 RAM',
-                quantity: parseInt(2),
-                unit_price: Number(1500),
-                line_total: Number(3000),
-                cost: Number(1800),
-                profit: Number(1200)
-            }
-        ],
-        total_amount: Number(3000),
-        total_profit: Number(1200),
-        payment_method: 'Cash',
-        processed_by: 'cashier_02'
-    }
-];
+const SALES_LOGS = [];
 
 // --- return_logs: return operations ---
-const RETURN_LOGS = [
-    {
-        _id: 'retlog_001',
-        timestamp: new Date('2025-01-20T11:00:00Z'),
-        return_id: parseInt(1),
-        original_sale_id: parseInt(2),
-        item_id: parseInt(2),
-        item_name: 'RTX 4060',
-        quantity_returned: parseInt(1),
-        reason: 'Defective',
-        disposition: 'Defective Bin',
-        refund_amount: Number(18500),
-        restocked: false,
-        approved_by: 'manager_01',
-        customer_name: 'Maria Santos',
-        notes: 'GPU issue detected during testing - no restock'
-    },
-    {
-        _id: 'retlog_002',
-        timestamp: new Date('2025-01-22T14:30:00Z'),
-        return_id: parseInt(2),
-        original_sale_id: parseInt(3),
-        item_id: parseInt(3),
-        item_name: '8GB DDR4 RAM',
-        quantity_returned: parseInt(1),
-        reason: 'Wrong Item',
-        disposition: 'Returned to Stock',
-        refund_amount: Number(1500),
-        restocked: true,
-        approved_by: 'manager_01',
-        customer_name: 'Jose Rizal',
-        notes: 'Customer ordered DDR5, mistakenly received DDR4 - restocked'
-    },
-    {
-        _id: 'retlog_003',
-        timestamp: new Date('2025-01-25T16:15:00Z'),
-        return_id: parseInt(3),
-        original_sale_id: parseInt(1),
-        item_id: parseInt(1),
-        item_name: 'Ryzen 5 5600',
-        quantity_returned: parseInt(1),
-        reason: 'Change of Mind',
-        disposition: 'Returned to Stock',
-        refund_amount: Number(8500),
-        restocked: true,
-        approved_by: 'admin',
-        customer_name: 'Juan Dela Cruz',
-        notes: 'Customer decided to upgrade to Ryzen 7 - restocked full refund'
-    }
-];
+const RETURN_LOGS = [];
 
 // ========== UNIFIED SYSTEM ACTIVITY FEED ==========
 // Consolidated log from ALL modules: POS, Inventory, Ledger, Returns
 // Schema: _id, user_id, username, role, action, reference_id, created_at
 
-const SYSTEM_ACTIVITY_FEED = [
-    {
-        _id: 'activity_001',
-        user_id: 1,
-        username: 'admin',
-        role: 'Administrator',
-        action: 'RESTOCK_ITEM',
-        reference_id: 1,
-        created_at: new Date('2025-01-15T08:00:00Z'),
-        details: 'Restocked 50 units of Ryzen 5 5600 from supplier AMD Phil'
-    },
-    {
-        _id: 'activity_002',
-        user_id: 1,
-        username: 'admin',
-        role: 'Administrator',
-        action: 'RESTOCK_ITEM',
-        reference_id: 2,
-        created_at: new Date('2025-01-15T08:15:00Z'),
-        details: 'Restocked 25 units of RTX 4060 from supplier Asus Ph'
-    },
-    {
-        _id: 'activity_003',
-        user_id: 1,
-        username: 'admin',
-        role: 'Administrator',
-        action: 'RESTOCK_ITEM',
-        reference_id: 3,
-        created_at: new Date('2025-01-15T08:30:00Z'),
-        details: 'Restocked 100 units of 8GB DDR4 RAM from supplier Kingston D.'
-    },
-    {
-        _id: 'activity_004',
-        user_id: 2,
-        username: 'cashier_01',
-        role: 'Cashier',
-        action: 'PROCESS_SALE',
-        reference_id: 1,
-        created_at: new Date('2025-01-15T14:12:00Z'),
-        details: 'Processed sale #1 to Juan Dela Cruz - 1x Ryzen 5 5600 (₱8,500)'
-    },
-    {
-        _id: 'activity_005',
-        user_id: 2,
-        username: 'cashier_01',
-        role: 'Cashier',
-        action: 'PROCESS_SALE',
-        reference_id: 2,
-        created_at: new Date('2025-01-15T15:30:00Z'),
-        details: 'Processed sale #2 to Maria Santos - 1x RTX 4060 (₱18,500)'
-    },
-    {
-        _id: 'activity_006',
-        user_id: 3,
-        username: 'cashier_02',
-        role: 'Cashier',
-        action: 'PROCESS_SALE',
-        reference_id: 3,
-        created_at: new Date('2025-01-16T09:00:00Z'),
-        details: 'Processed sale #3 to Jose Rizal - 2x 8GB DDR4 RAM (₱3,000)'
-    },
-    {
-        _id: 'activity_007',
-        user_id: 4,
-        username: 'manager_01',
-        role: 'Manager',
-        action: 'APPROVE_RETURN',
-        reference_id: 1,
-        created_at: new Date('2025-01-20T11:00:00Z'),
-        details: 'Approved return #1 for 1x RTX 4060 from sale #2 (Maria Santos) - Defective - Refund: ₱18,500'
-    },
-    {
-        _id: 'activity_008',
-        user_id: 4,
-        username: 'manager_01',
-        role: 'Manager',
-        action: 'APPROVE_RETURN',
-        reference_id: 2,
-        created_at: new Date('2025-01-22T14:30:00Z'),
-        details: 'Approved return #2 for 1x 8GB DDR4 RAM from sale #3 (Jose Rizal) - Wrong item - Refund: ₱1,500'
-    },
-    {
-        _id: 'activity_009',
-        user_id: 1,
-        username: 'admin',
-        role: 'Administrator',
-        action: 'APPROVE_RETURN',
-        reference_id: 3,
-        created_at: new Date('2025-01-25T16:15:00Z'),
-        details: 'Approved return #3 for 1x Ryzen 5 5600 from sale #1 (Juan Dela Cruz) - Change of mind - Refund: ₱8,500'
-    }
-];
+const SYSTEM_ACTIVITY_FEED = [];
 
 // Deprecated: SYSTEM_ACTIVITY_LOGS (kept for backward compatibility during migration)
 const SYSTEM_ACTIVITY_LOGS = SYSTEM_ACTIVITY_FEED;
+
+// ========== ANALYTICS COLLECTIONS (MongoDB Aggregated Data) ==========
+
+// --- daily_sales_summary: daily aggregated metrics ---
+const DAILY_SALES_SUMMARY = [];
+
+// --- city_sales_analytics: geographic performance ---
+const CITY_SALES_ANALYTICS = [];
+
+// --- city_customer_distribution: customer demographics by city ---
+const CITY_CUSTOMER_DISTRIBUTION = [];
+
+// --- customer_analytics: individual customer insights ---
+const CUSTOMER_ANALYTICS = [];
+
+// --- item_performance_analytics: product performance metrics ---
+const ITEM_PERFORMANCE_ANALYTICS = [];
+
+// --- financial_snapshots: overall business health snapshots ---
+const FINANCIAL_SNAPSHOTS = [];
 
 // Log ID counters
 let nextInventoryLogId = INVENTORY_LOGS.length + 1;
@@ -587,11 +256,159 @@ updateClock();
 
 const Dashboard = {
     init() {
+        // Build live analytics from actual sales data
+        this.buildLiveAnalytics();
+        
         this.renderKPIs();
         this.renderAlerts();
+        this.renderFinancialSnapshot();
         this.renderProfit();
-        this.renderTopProducts();
-        LogRenderers.renderActivityFeed();
+        this.renderDailySalesCards();
+        this.renderDailySales();
+        this.renderTopProductsChart();
+        this.renderItemPerformance();
+        this.renderCityPerformanceCards();
+        this.renderCityAnalytics();
+        this.renderTopCustomersChart();
+    },
+
+    buildLiveAnalytics() {
+        // Build DAILY_SALES_SUMMARY
+        DAILY_SALES_SUMMARY.length = 0;
+        const dailyMap = {};
+        SALES.forEach(sale => {
+            const date = sale.date;
+            if (!dailyMap[date]) {
+                dailyMap[date] = {
+                    date: date,
+                    total_sales: 0,
+                    total_profit: 0,
+                    transactions_count: 1,
+                    total_items_sold: 0,
+                    average_transaction_value: 0
+                };
+            } else {
+                dailyMap[date].transactions_count++;
+            }
+
+            // Sum sale items for this date
+            SALE_ITEMS.filter(si => si.saleId === sale.id).forEach(si => {
+                const item = getItem(si.itemId);
+                const lineTotal = si.soldPrice * si.qty;
+                const profit = (si.soldPrice - (item ? item.cost : 0)) * si.qty;
+                dailyMap[date].total_sales += lineTotal;
+                dailyMap[date].total_profit += profit;
+                dailyMap[date].total_items_sold += si.qty;
+            });
+        });
+        Object.values(dailyMap).forEach(day => {
+            day.average_transaction_value = day.transactions_count > 0 ? day.total_sales / day.transactions_count : 0;
+            DAILY_SALES_SUMMARY.push(day);
+        });
+
+        // Build ITEM_PERFORMANCE_ANALYTICS
+        ITEM_PERFORMANCE_ANALYTICS.length = 0;
+        const itemMap = {};
+        SALE_ITEMS.forEach(si => {
+            const item = getItem(si.itemId);
+            if (!item) return;
+            const type = getType(item.typeId);
+            
+            if (!itemMap[si.itemId]) {
+                itemMap[si.itemId] = {
+                    name: item.name,
+                    type: type ? type.name : 'Unknown',
+                    total_quantity_sold: 0,
+                    total_revenue: 0,
+                    total_profit: 0,
+                    return_rate: 0,
+                    damage_rate: 0
+                };
+            }
+            
+            const lineTotal = si.soldPrice * si.qty;
+            const profit = (si.soldPrice - item.cost) * si.qty;
+            itemMap[si.itemId].total_quantity_sold += si.qty;
+            itemMap[si.itemId].total_revenue += lineTotal;
+            itemMap[si.itemId].total_profit += profit;
+        });
+        Object.values(itemMap).forEach(item => {
+            ITEM_PERFORMANCE_ANALYTICS.push(item);
+        });
+
+        // Build CUSTOMER_ANALYTICS
+        CUSTOMER_ANALYTICS.length = 0;
+        const customerMap = {};
+        SALES.forEach(sale => {
+            const customerKey = sale.customerData ? sale.customerData.phone : sale.customerId;
+            const customerName = sale.customerData ? sale.customerData.name : 'Unknown';
+            const customerCity = sale.customerData ? sale.customerData.city : '';
+            
+            if (!customerMap[customerKey]) {
+                customerMap[customerKey] = {
+                    name: customerName,
+                    city: customerCity,
+                    total_orders: 0,
+                    total_spent: 0,
+                    total_profit_generated: 0,
+                    last_purchase_date: sale.date,
+                    favorite_item_type: 'Unknown'
+                };
+            }
+            
+            customerMap[customerKey].total_orders++;
+            customerMap[customerKey].last_purchase_date = sale.date;
+            
+            // Sum sale items for this customer
+            SALE_ITEMS.filter(si => si.saleId === sale.id).forEach(si => {
+                const item = getItem(si.itemId);
+                const type = getType(item ? item.typeId : null);
+                const lineTotal = si.soldPrice * si.qty;
+                const profit = (si.soldPrice - (item ? item.cost : 0)) * si.qty;
+                customerMap[customerKey].total_spent += lineTotal;
+                customerMap[customerKey].total_profit_generated += profit;
+                if (type) customerMap[customerKey].favorite_item_type = type.name;
+            });
+        });
+        Object.values(customerMap).forEach(customer => {
+            CUSTOMER_ANALYTICS.push(customer);
+        });
+
+        // Build FINANCIAL_SNAPSHOTS
+        FINANCIAL_SNAPSHOTS.length = 0;
+        if (SALES.length > 0) {
+            let totalRevenue = 0, totalCost = 0, totalReturns = 0, totalDamage = 0;
+            
+            SALE_ITEMS.forEach(si => {
+                const item = getItem(si.itemId);
+                const lineTotal = si.soldPrice * si.qty;
+                const cost = (item ? item.cost : 0) * si.qty;
+                totalRevenue += lineTotal;
+                totalCost += cost;
+            });
+
+            // TODO: Add returns and damage calculation from RETURNS array if needed
+            
+            const netSales = totalRevenue - totalReturns;
+            const netProfit = netSales - totalCost - totalDamage;
+            
+            // Get top city and item
+            const topCity = CITY_SALES_ANALYTICS.length > 0 ? CITY_SALES_ANALYTICS[0].city : 'N/A';
+            const topItem = ITEM_PERFORMANCE_ANALYTICS.length > 0 ? ITEM_PERFORMANCE_ANALYTICS[0].name : 'N/A';
+            const lowStockCount = ITEMS.filter(i => i.qty <= LOW_STOCK_THRESHOLD).length;
+            
+            FINANCIAL_SNAPSHOTS.push({
+                snapshot_date: new Date().toISOString(),
+                gross_sales: totalRevenue,
+                total_returns: totalReturns,
+                damaged_stock_loss: totalDamage,
+                net_sales: netSales,
+                net_profit: netProfit,
+                top_city: topCity,
+                top_item: topItem,
+                low_stock_count: lowStockCount
+            });
+        }
     },
 
     renderKPIs() {
@@ -691,6 +508,364 @@ const Dashboard = {
                 <td>${peso(p.revenue)}</td>
                 <td style="color: var(--green)">${peso(p.profit)}</td>
             </tr>`).join('');
+    },
+
+    renderDailySales() {
+        const sorted = [...DAILY_SALES_SUMMARY].sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        document.getElementById('dailySalesBody').innerHTML = sorted.map(day => `
+            <tr>
+                <td>${new Date(day.date).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
+                <td style="color: var(--green)">${peso(day.total_sales)}</td>
+                <td style="color: var(--blue)">${peso(day.total_profit)}</td>
+                <td>${day.transactions_count}</td>
+                <td>${day.total_items_sold}</td>
+                <td>${peso(day.average_transaction_value)}</td>
+            </tr>`).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);">No data available</td></tr>';
+    },
+
+    renderCityAnalytics() {
+        // Build live city analytics from actual sale data
+        this.buildLiveCityAnalytics();
+        const sorted = [...CITY_SALES_ANALYTICS].sort((a, b) => b.total_sales_amount - a.total_sales_amount);
+        
+        document.getElementById('cityAnalyticsBody').innerHTML = sorted.map(city => `
+            <tr>
+                <td><strong>${city.city}</strong></td>
+                <td>${city.total_customers}</td>
+                <td style="color: var(--green)">${peso(city.total_sales_amount)}</td>
+                <td>${city.total_transactions}</td>
+                <td>${city.total_items_sold}</td>
+                <td style="color: var(--blue)">${peso(city.total_profit)}</td>
+                <td>${city.most_purchased_item ? city.most_purchased_item.name : 'N/A'} (${city.most_purchased_item ? city.most_purchased_item.quantity : 0})</td>
+            </tr>`).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);">No data available</td></tr>';
+    },
+
+    renderCustomerAnalytics() {
+        const sorted = [...CUSTOMER_ANALYTICS].sort((a, b) => b.total_spent - a.total_spent);
+        
+        document.getElementById('customerAnalyticsBody').innerHTML = sorted.map(customer => {
+            const lastPurchase = new Date(customer.last_purchase_date).toLocaleDateString('en-PH', { year: 'numeric', month: 'short', day: 'numeric' });
+            return `
+            <tr>
+                <td><strong>${customer.name}</strong></td>
+                <td>${customer.city}</td>
+                <td>${customer.total_orders}</td>
+                <td style="color: var(--green)">${peso(customer.total_spent)}</td>
+                <td style="color: var(--blue)">${peso(customer.total_profit_generated)}</td>
+                <td>${lastPurchase}</td>
+                <td>${customer.favorite_item_type}</td>
+            </tr>`;
+        }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--text-muted);">No data available</td></tr>';
+    },
+
+    renderItemPerformance() {
+        const sorted = [...ITEM_PERFORMANCE_ANALYTICS].sort((a, b) => b.total_revenue - a.total_revenue);
+        
+        document.getElementById('itemPerformanceBody').innerHTML = sorted.map(item => {
+            const returnRate = (item.return_rate * 100).toFixed(1);
+            const damageRate = (item.damage_rate * 100).toFixed(1);
+            const performance = item.return_rate === 0 && item.damage_rate === 0 ? 'Excellent' : 
+                               item.return_rate < 0.2 && item.damage_rate < 0.2 ? 'Good' : 
+                               item.return_rate < 0.5 && item.damage_rate < 0.5 ? 'Fair' : 'Poor';
+            const performanceColor = performance === 'Excellent' ? 'var(--green)' : 
+                                    performance === 'Good' ? 'var(--blue)' : 
+                                    performance === 'Fair' ? 'var(--orange)' : 'var(--red)';
+            return `
+            <tr>
+                <td><strong>${item.name}</strong></td>
+                <td>${item.type}</td>
+                <td>${item.total_quantity_sold}</td>
+                <td style="color: var(--green)">${peso(item.total_revenue)}</td>
+                <td style="color: var(--blue)">${peso(item.total_profit)}</td>
+                <td>${returnRate}%</td>
+                <td>${damageRate}%</td>
+                <td style="color: ${performanceColor}"><strong>${performance}</strong></td>
+            </tr>`;
+        }).join('') || '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);">No data available</td></tr>';
+    },
+
+    renderFinancialSnapshot() {
+        const latest = FINANCIAL_SNAPSHOTS.length > 0 ? FINANCIAL_SNAPSHOTS[FINANCIAL_SNAPSHOTS.length - 1] : null;
+        
+        if (!latest) {
+            document.getElementById('financialSnapshotBody').innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:24px;">No financial snapshot available</div>';
+            return;
+        }
+
+        const snapshotDate = new Date(latest.snapshot_date).toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' });
+        const netSalesMargin = latest.gross_sales > 0 ? ((latest.net_profit / latest.net_sales) * 100).toFixed(1) : '0.0';
+        
+        document.getElementById('financialSnapshotBody').innerHTML = `
+            <div class="snapshot-header" style="text-align:center;margin-bottom:24px;padding-bottom:16px;border-bottom:1px solid var(--border);">
+                <h4 style="margin:0;color:var(--accent);">Snapshot as of ${snapshotDate}</h4>
+            </div>
+            <div class="profit-summary" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;">
+                <div class="profit-stat" style="background:var(--card-bg);padding:16px;border-radius:8px;border:1px solid var(--border);">
+                    <span class="stat-label" style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:8px;">Gross Sales</span>
+                    <span class="stat-value" style="display:block;font-size:1.5rem;font-weight:bold;color:var(--green);">${peso(latest.gross_sales)}</span>
+                </div>
+                <div class="profit-stat" style="background:var(--card-bg);padding:16px;border-radius:8px;border:1px solid var(--border);">
+                    <span class="stat-label" style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:8px;">Total Returns</span>
+                    <span class="stat-value" style="display:block;font-size:1.5rem;font-weight:bold;color:var(--orange);">${peso(latest.total_returns)}</span>
+                </div>
+                <div class="profit-stat" style="background:var(--card-bg);padding:16px;border-radius:8px;border:1px solid var(--border);">
+                    <span class="stat-label" style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:8px;">Damaged Stock Loss</span>
+                    <span class="stat-value" style="display:block;font-size:1.5rem;font-weight:bold;color:var(--red);">${peso(latest.damaged_stock_loss)}</span>
+                </div>
+                <div class="profit-stat" style="background:var(--card-bg);padding:16px;border-radius:8px;border:1px solid var(--border);">
+                    <span class="stat-label" style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:8px;">Net Sales</span>
+                    <span class="stat-value" style="display:block;font-size:1.5rem;font-weight:bold;color:var(--green);">${peso(latest.net_sales)}</span>
+                </div>
+                <div class="profit-stat" style="background:var(--card-bg);padding:16px;border-radius:8px;border:1px solid var(--border);">
+                    <span class="stat-label" style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:8px;">Net Profit</span>
+                    <span class="stat-value" style="display:block;font-size:1.5rem;font-weight:bold;color:var(--blue);">${peso(latest.net_profit)}</span>
+                </div>
+                <div class="profit-stat" style="background:var(--card-bg);padding:16px;border-radius:8px;border:1px solid var(--border);">
+                    <span class="stat-label" style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:8px;">Profit Margin</span>
+                    <span class="stat-value" style="display:block;font-size:1.5rem;font-weight:bold;color:var(--accent);">${netSalesMargin}%</span>
+                </div>
+            </div>
+            <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;">
+                <div>
+                    <strong style="color:var(--accent);display:block;margin-bottom:8px;">Top Performing City:</strong>
+                    <span style="font-size:1.2rem;color:var(--text);">${latest.top_city}</span>
+                </div>
+                <div>
+                    <strong style="color:var(--accent);display:block;margin-bottom:8px;">Best Selling Product:</strong>
+                    <span style="font-size:1.2rem;color:var(--text);">${latest.top_item}</span>
+                </div>
+                <div>
+                    <strong style="color:var(--accent);display:block;margin-bottom:8px;">Low Stock Alerts:</strong>
+                    <span style="font-size:1.2rem;color:${latest.low_stock_count > 5 ? 'var(--red)' : latest.low_stock_count > 0 ? 'var(--orange)' : 'var(--green)'};">${latest.low_stock_count}</span>
+                </div>
+            </div>
+        `;
+    },
+
+    renderDailySalesCards() {
+        const sorted = [...DAILY_SALES_SUMMARY].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
+        
+        if (sorted.length === 0) {
+            document.getElementById('dailySalesCards').innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:24px;">No sales data available</div>';
+            return;
+        }
+
+        const maxSales = Math.max(...sorted.map(d => d.total_sales));
+        
+        document.getElementById('dailySalesCards').innerHTML = sorted.map(day => {
+            const date = new Date(day.date).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' });
+            const salesPercent = (day.total_sales / maxSales) * 100;
+            const profitMargin = day.total_sales > 0 ? ((day.total_profit / day.total_sales) * 100).toFixed(1) : '0';
+            
+            return `
+                <div class="analytics-card">
+                    <div class="analytics-card-header">
+                        <h4>${date}</h4>
+                        <span class="badge badge-ok">${day.transactions_count} txns</span>
+                    </div>
+                    <div class="analytics-card-value" style="color:var(--green);">${peso(day.total_sales)}</div>
+                    <div class="analytics-bar">
+                        <div class="analytics-bar-fill" style="width:${salesPercent}%;background:var(--green);"></div>
+                    </div>
+                    <div class="analytics-card-stats">
+                        <div><small>Profit:</small> <strong style="color:var(--blue);">${peso(day.total_profit)}</strong></div>
+                        <div><small>Margin:</small> <strong>${profitMargin}%</strong></div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    renderTopProductsChart() {
+        const productMap = {};
+        SALE_ITEMS.forEach(si => {
+            if (!productMap[si.itemId]) productMap[si.itemId] = { units: 0, revenue: 0, profit: 0 };
+            const item = getItem(si.itemId);
+            productMap[si.itemId].units += si.qty;
+            productMap[si.itemId].revenue += si.soldPrice * si.qty;
+            productMap[si.itemId].profit += (si.soldPrice - (item ? item.cost : 0)) * si.qty;
+        });
+
+        const sorted = Object.entries(productMap)
+            .map(([id, data]) => ({ item: getItem(Number(id)), ...data }))
+            .filter(x => x.item)
+            .sort((a, b) => b.revenue - a.revenue)
+            .slice(0, 8);
+
+        if (sorted.length === 0) {
+            document.getElementById('topProductsChart').innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:24px;">No product sales data available</div>';
+            return;
+        }
+
+        const maxRevenue = Math.max(...sorted.map(p => p.revenue));
+        
+        document.getElementById('topProductsChart').innerHTML = sorted.map((p, index) => {
+            const revenuePercent = (p.revenue / maxRevenue) * 100;
+            const profitPercent = p.revenue > 0 ? ((p.profit / p.revenue) * 100).toFixed(1) : '0';
+            
+            return `
+                <div class="chart-row">
+                    <div class="chart-row-label">
+                        <span class="chart-rank">#${index + 1}</span>
+                        <strong>${p.item.name}</strong>
+                        <small style="color:var(--text-muted);">${p.units} units</small>
+                    </div>
+                    <div class="chart-row-bar">
+                        <div class="chart-bar-fill" style="width:${revenuePercent}%;background:linear-gradient(90deg,var(--accent),var(--green));"></div>
+                        <span class="chart-bar-value">${peso(p.revenue)}</span>
+                    </div>
+                    <div class="chart-row-stat">
+                        <small>Profit:</small> <strong style="color:var(--blue);">${peso(p.profit)}</strong>
+                        <small>(${profitPercent}%)</small>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    renderCityPerformanceCards() {
+        // Ensure live city data is up to date
+        this.buildLiveCityAnalytics();
+        const sorted = [...CITY_SALES_ANALYTICS].sort((a, b) => b.total_sales_amount - a.total_sales_amount).slice(0, 5);
+        
+        if (sorted.length === 0) {
+            document.getElementById('cityPerformanceCards').innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:24px;">No city data available</div>';
+            return;
+        }
+
+        const maxSales = Math.max(...sorted.map(c => c.total_sales_amount));
+        
+        document.getElementById('cityPerformanceCards').innerHTML = sorted.map((city, index) => {
+            const salesPercent = (city.total_sales_amount / maxSales) * 100;
+            const profitMargin = city.total_sales_amount > 0 ? ((city.total_profit / city.total_sales_amount) * 100).toFixed(1) : '0';
+            const rankColors = ['var(--accent)', 'var(--blue)', 'var(--green)', 'var(--orange)', 'var(--text-muted)'];
+            
+            return `
+                <div class="analytics-card">
+                    <div class="analytics-card-header">
+                        <h4><i class="fas fa-map-marker-alt" style="color:${rankColors[index]};"></i> ${city.city}</h4>
+                        <span class="badge badge-ok"># ${index + 1}</span>
+                    </div>
+                    <div class="analytics-card-value" style="color:var(--green);">${peso(city.total_sales_amount)}</div>
+                    <div class="analytics-bar">
+                        <div class="analytics-bar-fill" style="width:${salesPercent}%;background:${rankColors[index]};"></div>
+                    </div>
+                    <div class="analytics-card-stats">
+                        <div><small>Profit:</small> <strong style="color:var(--blue);">${peso(city.total_profit)}</strong></div>
+                        <div><small>Customers:</small> <strong>${city.total_customers}</strong></div>
+                        <div><small>Margin:</small> <strong>${profitMargin}%</strong></div>
+                    </div>
+                    <div class="analytics-card-footer">
+                        <small><i class="fas fa-star"></i> ${city.most_purchased_item ? city.most_purchased_item.name : 'N/A'}</small>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    // Build city analytics from live sales data (customer.city)
+    buildLiveCityAnalytics() {
+        // Clear existing data
+        CITY_SALES_ANALYTICS.length = 0;
+        
+        // Build city map from actual sales
+        const cityMap = {};
+        SALES.forEach(sale => {
+            const city = sale.customerData ? sale.customerData.city : '';
+            if (!city) return;
+            
+            if (!cityMap[city]) {
+                cityMap[city] = {
+                    city: city,
+                    total_customers: new Set(),
+                    total_sales_amount: 0,
+                    total_transactions: 0,
+                    total_items_sold: 0,
+                    total_profit: 0,
+                    itemCounts: {}
+                };
+            }
+            
+            const customerKey = sale.customerData ? sale.customerData.phone : sale.customerId;
+            cityMap[city].total_customers.add(customerKey);
+            cityMap[city].total_transactions++;
+            
+            // Sum up sale items for this sale
+            SALE_ITEMS.filter(si => si.saleId === sale.id).forEach(si => {
+                const item = getItem(si.itemId);
+                const lineTotal = si.soldPrice * si.qty;
+                const profit = (si.soldPrice - (item ? item.cost : 0)) * si.qty;
+                cityMap[city].total_sales_amount += lineTotal;
+                cityMap[city].total_items_sold += si.qty;
+                cityMap[city].total_profit += profit;
+                
+                // Track top product
+                const itemName = item ? item.name : 'Unknown';
+                if (!cityMap[city].itemCounts[itemName]) cityMap[city].itemCounts[itemName] = 0;
+                cityMap[city].itemCounts[itemName] += si.qty;
+            });
+        });
+        
+        // Convert map to array
+        Object.values(cityMap).forEach(c => {
+            // Find most purchased item
+            let topItem = null;
+            let topQty = 0;
+            Object.entries(c.itemCounts).forEach(([name, qty]) => {
+                if (qty > topQty) { topItem = name; topQty = qty; }
+            });
+            
+            CITY_SALES_ANALYTICS.push({
+                city: c.city,
+                total_customers: c.total_customers.size,
+                total_sales_amount: c.total_sales_amount,
+                total_transactions: c.total_transactions,
+                total_items_sold: c.total_items_sold,
+                total_profit: c.total_profit,
+                most_purchased_item: topItem ? { name: topItem, quantity: topQty } : null
+            });
+        });
+    },
+
+    renderTopCustomersChart() {
+        const sorted = [...CUSTOMER_ANALYTICS].sort((a, b) => b.total_spent - a.total_spent).slice(0, 10);
+        
+        if (sorted.length === 0) {
+            document.getElementById('topCustomersChart').innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:24px;">No customer data available</div>';
+            return;
+        }
+
+        const maxSpent = Math.max(...sorted.map(c => c.total_spent));
+        
+        document.getElementById('topCustomersChart').innerHTML = sorted.map((customer, index) => {
+            const spentPercent = (customer.total_spent / maxSpent) * 100;
+            const profitPercent = customer.total_spent > 0 ? ((customer.total_profit_generated / customer.total_spent) * 100).toFixed(1) : '0';
+            const lastPurchase = new Date(customer.last_purchase_date).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' });
+            
+            return `
+                <div class="chart-row">
+                    <div class="chart-row-label">
+                        <span class="chart-rank">#${index + 1}</span>
+                        <div>
+                            <strong>${customer.name}</strong>
+                            <small style="color:var(--text-muted);display:block;">${customer.city} • ${customer.favorite_item_type}</small>
+                        </div>
+                    </div>
+                    <div class="chart-row-bar">
+                        <div class="chart-bar-fill" style="width:${spentPercent}%;background:linear-gradient(90deg,var(--blue),var(--accent));"></div>
+                        <span class="chart-bar-value">${peso(customer.total_spent)}</span>
+                    </div>
+                    <div class="chart-row-stat">
+                        <small>Profit:</small> <strong style="color:var(--green);">${peso(customer.total_profit_generated)}</strong>
+                        <small>(${profitPercent}%)</small>
+                        <div style="margin-top:4px;font-size:0.7rem;color:var(--text-muted);">
+                            <i class="fas fa-calendar"></i> ${lastPurchase}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
     }
 };
 
@@ -772,7 +947,7 @@ const POS = {
             document.getElementById('customerName').value = customer.name;
             document.getElementById('customerPhone').value = customer.phone;
             document.getElementById('customerEmail').value = customer.email || '';
-            document.getElementById('customerAddress').value = customer.address || '';
+            document.getElementById('customerCity').value = customer.city || '';
             document.getElementById('customerSearch').value = customer.name;
             document.getElementById('customerSearchResults').style.display = 'none';
         }
@@ -901,7 +1076,7 @@ const POS = {
         const customerName = document.getElementById('customerName').value.trim();
         const customerPhone = document.getElementById('customerPhone').value.trim();
         const customerEmail = document.getElementById('customerEmail').value.trim();
-        const customerAddress = document.getElementById('customerAddress').value.trim();
+        const customerCity = document.getElementById('customerCity').value.trim();
         const processedByUsername = document.getElementById('posCashier').value.trim();
 
         // Validate required fields
@@ -926,7 +1101,7 @@ const POS = {
                 phone: customerPhone,
                 name: customerName,
                 email: customerEmail,
-                address: customerAddress
+                city: customerCity
             });
             // Refresh the customer dropdown
             this.populateCustomers();
@@ -944,7 +1119,7 @@ const POS = {
         // Create sale
         const saleId = SALES.length + 1;
         const saleDate = new Date().toISOString().slice(0, 10);
-        SALES.push({ id: saleId, date: saleDate, customerId: 0, customerData: { name: customerName, phone: customerPhone, email: customerEmail, address: customerAddress } });
+        SALES.push({ id: saleId, date: saleDate, customerId: 0, customerData: { name: customerName, phone: customerPhone, email: customerEmail, city: customerCity } });
 
         // Process each item atomically
         let receiptHTML = '';
@@ -998,24 +1173,8 @@ const POS = {
         const itemsDescription = logItems.map(i => `${i.quantity}x ${i.item_name}`).join(', ');
         const staffInfo = getStaffInfo(processedByUsername);
 
-        // Reset
-        this.cart = [];
-        this.renderCart();
-        this.renderProducts();
-        // Clear customer form and search
-        document.getElementById('customerSearch').value = '';
-        document.getElementById('customerName').value = '';
-        document.getElementById('customerPhone').value = '';
-        document.getElementById('customerEmail').value = '';
-        document.getElementById('customerAddress').value = '';
-        document.getElementById('customerSearchResults').style.display = 'none';
-
-        // Refresh dashboard data
-        Dashboard.init();
-        Ledger.init();
-        Returns.init();
-
         // === LOG INTERCEPTOR: Auto-generate sales_log + inventory_logs ===
+        // IMPORTANT: Do this BEFORE clearing cart and BEFORE dashboard.init()
 
         // Sales Log (with nested customer + items)
         LogInterceptors.createSalesLog({
@@ -1025,7 +1184,7 @@ const POS = {
                 name: customerName,
                 phone: customerPhone,
                 email: customerEmail,
-                city: customerAddress
+                city: customerCity
             },
             items: logItems,
             total_amount: total,
@@ -1053,6 +1212,7 @@ const POS = {
         });
 
         // === UNIFIED ACTIVITY FEED LOG ===
+        // Log 1: Sales Processed event
         LogInterceptors.createActivityLog({
             user_id: staffInfo.user_id,
             username: staffInfo.username,
@@ -1062,14 +1222,44 @@ const POS = {
             details: `Processed sale #${saleId} to ${customerName} - ${itemsDescription} (${peso(total)})`
         });
 
-        // System Activity Log (legacy)
-        LogInterceptors.createSystemActivityLog({
-            event_type: 'Sale Processed',
-            user: 'cashier_01',
-            details: `Sale #${saleId} — ${logItems.length} item(s), total ${peso(total)} to ${customerName}`,
-            severity: 'success'
+        // Log 2: Inventory Auto-Update event (stock was deducted for each item)
+        const stockSummary = logItems.map(i => {
+            const item = getItem(i.item_id);
+            return `${i.item_name}: -${i.quantity} (now ${item ? item.qty : '?'})`;
+        }).join(', ');
+        LogInterceptors.createActivityLog({
+            user_id: staffInfo.user_id,
+            username: staffInfo.username,
+            role: staffInfo.role,
+            action: 'INVENTORY_AUTO_UPDATE',
+            reference_id: saleId,
+            details: `Auto stock deduction from sale #${saleId} — ${stockSummary}`
         });
         // === END LOG INTERCEPTOR ===
+
+        // Reset
+        this.cart = [];
+        this.renderCart();
+        this.renderProducts();
+        // Clear customer form and search
+        document.getElementById('customerSearch').value = '';
+        document.getElementById('customerName').value = '';
+        document.getElementById('customerPhone').value = '';
+        document.getElementById('customerEmail').value = '';
+        document.getElementById('customerCity').value = '';
+        document.getElementById('customerSearchResults').style.display = 'none';
+
+        // Refresh dashboard data (NOW logs will be available)
+        Dashboard.init();
+        Inventory.init();
+        Ledger.init();
+        Returns.init();
+        ActivityLog.init();
+        
+        // Refresh all log renderers
+        LogRenderers.renderSalesLogs();
+        LogRenderers.renderInventoryLogs();
+        LogRenderers.renderActivityFeed();
 
         // Check new low stock alerts
         const newLow = ITEMS.filter(i => i.qty > 0 && i.qty <= LOW_STOCK_THRESHOLD);
@@ -1175,6 +1365,9 @@ const Inventory = {
             // Edit existing product
             const item = getItem(Number(editId));
             if (item) {
+                const oldQty = item.qty;
+                const qtyChanged = qty !== oldQty;
+                
                 item.name = name;
                 item.typeId = typeId;
                 item.supplierId = supplierId;
@@ -1182,6 +1375,22 @@ const Inventory = {
                 item.price = price;
                 item.cost = cost;
                 showToast(`Product "${name}" updated successfully`, 'success');
+
+                // === LOG INTERCEPTOR: inventory_log if stock changed ===
+                if (qtyChanged) {
+                    const qtyChange = qty - oldQty;
+                    LogInterceptors.createInventoryLog({
+                        action: 'PRODUCT_UPDATED',
+                        item_id: Number(editId),
+                        item_name: name,
+                        quantity_change: qtyChange,
+                        previous_stock: oldQty,
+                        new_stock: qty,
+                        performed_by: staffUsername,
+                        reference: 'PRODUCT-EDIT',
+                        notes: `Product stock adjusted during edit - ${oldQty} → ${qty}`
+                    });
+                }
 
                 // === UNIFIED ACTIVITY FEED LOG ===
                 const staffInfo = getStaffInfo(staffUsername);
@@ -1191,7 +1400,7 @@ const Inventory = {
                     role: staffInfo.role,
                     action: 'UPDATE_PRODUCT',
                     reference_id: Number(editId),
-                    details: `Updated product "${name}" - Category: ${ITEM_TYPES.find(t => t.id === typeId)?.name || 'Unknown'}, Price: ${peso(price)}`
+                    details: `Updated product "${name}" - Category: ${ITEM_TYPES.find(t => t.id === typeId)?.name || 'Unknown'}, Price: ${peso(price)}${qtyChanged ? `, Stock: ${oldQty} → ${qty}` : ''}`
                 });
             }
         } else {
@@ -1207,6 +1416,19 @@ const Inventory = {
                 cost
             });
             showToast(`Product "${name}" added successfully`, 'success');
+
+            // === LOG INTERCEPTOR: inventory_log for initial stock ===
+            LogInterceptors.createInventoryLog({
+                action: 'PRODUCT_ADDED',
+                item_id: newId,
+                item_name: name,
+                quantity_change: qty,
+                previous_stock: 0,
+                new_stock: qty,
+                performed_by: staffUsername,
+                reference: 'NEW-PRODUCT',
+                notes: `New product added with initial stock of ${qty} units`
+            });
 
             // === UNIFIED ACTIVITY FEED LOG ===
             const staffInfo = getStaffInfo(staffUsername);
@@ -1224,6 +1446,8 @@ const Inventory = {
         this.render();
         POS.init(); // Refresh POS to show new/updated product
         Dashboard.init(); // Refresh dashboard
+        ActivityLog.init(); // Refresh activity log to show new product logs
+        LogRenderers.renderActivityFeed(); // Update activity feed display
     },
 
     editProduct(itemId) {
@@ -1353,13 +1577,6 @@ const Inventory = {
             notes: `Manual restock of ${qtyToAdd} units`
         });
 
-        LogInterceptors.createSystemActivityLog({
-            event_type: 'Stock Updated',
-            user: staffUsername,
-            details: `Restocked ${item.name}: ${oldQty} → ${item.qty} (+${qtyToAdd})`,
-            severity: 'info'
-        });
-
         // === UNIFIED ACTIVITY FEED LOG ===
         const staffInfo = getStaffInfo(staffUsername);
         LogInterceptors.createActivityLog({
@@ -1383,6 +1600,8 @@ const Inventory = {
         this.render();
         Dashboard.init(); // Refresh alerts
         POS.renderProducts(); // Refresh POS tiles
+        ActivityLog.init(); // Refresh activity stats
+        LogRenderers.renderActivityFeed();
 
         showToast(`Added ${qtyToAdd} units to ${item.name}. Stock updated: ${oldQty} → ${item.qty}`, 'success');
     },
@@ -1764,7 +1983,7 @@ const Ledger = {
             const sale = SALES.find(s => s.id === si.saleId);
             const product = getItem(si.itemId);
             
-            let customer = { name: 'Walk-in Customer', phone: 'N/A', email: 'N/A', address: 'N/A' };
+            let customer = { name: 'Walk-in Customer', phone: 'N/A', email: 'N/A', city: 'N/A' };
             if (sale) {
                 if (sale.customerData) {
                     customer = sale.customerData;
@@ -1787,7 +2006,7 @@ const Ledger = {
                     <div class="detail-row"><span class="detail-label">Name</span><span class="detail-value">${customer.name}</span></div>
                     <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">${customer.phone}</span></div>
                     <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">${customer.email || 'N/A'}</span></div>
-                    <div class="detail-row"><span class="detail-label">Address</span><span class="detail-value">${customer.address || 'N/A'}</span></div>
+                    <div class="detail-row"><span class="detail-label">City</span><span class="detail-value">${customer.city || 'N/A'}</span></div>
                 </div>
                 
                 <div class="detail-section">
@@ -1801,7 +2020,7 @@ const Ledger = {
             if (!ret) return;
             
             const product = getItem(ret.itemId);
-            let customer = { name: 'Walk-in Customer', phone: 'N/A', email: 'N/A', address: 'N/A' };
+            let customer = { name: 'Walk-in Customer', phone: 'N/A', email: 'N/A', city: 'N/A' };
             
             if (ret.customerData) {
                 customer = ret.customerData;
@@ -1833,7 +2052,7 @@ const Ledger = {
                     <div class="detail-row"><span class="detail-label">Name</span><span class="detail-value">${customer.name}</span></div>
                     <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">${customer.phone}</span></div>
                     <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">${customer.email || 'N/A'}</span></div>
-                    <div class="detail-row"><span class="detail-label">Address</span><span class="detail-value">${customer.address || 'N/A'}</span></div>
+                    <div class="detail-row"><span class="detail-label">City</span><span class="detail-value">${customer.city || 'N/A'}</span></div>
                 </div>
             `;
         }
@@ -2012,22 +2231,15 @@ const Returns = {
             });
         }
 
-        LogInterceptors.createSystemActivityLog({
-            event_type: 'Return Approved',
-            user: approverUsername,
-            details: `Return #${returnRecord.id} approved — ${qty}x ${item ? item.name : 'item'} ${restocked ? 'restocked' : 'sent to defective bin'}`,
-            severity: 'warning'
-        });
-
         // === UNIFIED ACTIVITY FEED LOG ===
         const staffInfo = getStaffInfo(approverUsername);
         LogInterceptors.createActivityLog({
             user_id: staffInfo.user_id,
             username: staffInfo.username,
             role: staffInfo.role,
-            action: 'APPROVE_RETURN',
+            action: 'PROCESS_RETURN',
             reference_id: returnRecord.id,
-            details: `Approved return #${returnRecord.id} for ${qty}x ${item ? item.name : 'item'} from sale #${saleId} - ${reason} - Refund: ${peso(returnedAmount)}`
+            details: `Processed return #${returnRecord.id} for ${qty}x ${item ? item.name : 'item'} from sale #${saleId} - ${reason} - Refund: ${peso(returnedAmount)}`
         });
         // === END LOG INTERCEPTOR ===
 
@@ -2050,6 +2262,8 @@ const Returns = {
         Ledger.init();
         Inventory.render();
         POS.renderProducts();
+        ActivityLog.init();
+        LogRenderers.renderActivityFeed();
     },
 
     renderHistory() {
@@ -2352,6 +2566,7 @@ const LogRenderers = {
             const actionIcons = {
                 'PROCESS_SALE': 'fa-cash-register',
                 'RESTOCK_ITEM': 'fa-boxes-stacked',
+                'INVENTORY_AUTO_UPDATE': 'fa-arrows-rotate',
                 'PROCESS_RETURN': 'fa-rotate-left',
                 'APPROVE_RETURN': 'fa-check-circle',
                 'DELETE_PRODUCT': 'fa-trash-can',
@@ -2562,12 +2777,55 @@ function populateStaffDropdowns() {
     }
 }
 
+// ============================================================
+// Activity Log
+// ============================================================
+const ActivityLog = {
+    init() {
+        // Render the activity feed
+        LogRenderers.renderActivityFeed();
+        
+        // Calculate activity statistics
+        this.renderActivityStats();
+    },
+    
+    renderActivityStats() {
+        let salesCount = 0;
+        let inventoryCount = 0;
+        let returnsCount = 0;
+        
+        SYSTEM_ACTIVITY_FEED.forEach(activity => {
+            if (activity.action === 'PROCESS_SALE') {
+                salesCount++;
+            } else if (activity.action === 'RESTOCK_ITEM' || activity.action === 'UPDATE_INVENTORY' || activity.action === 'ADJUST_STOCK' || activity.action === 'INVENTORY_AUTO_UPDATE') {
+                inventoryCount++;
+            } else if (activity.action === 'PROCESS_RETURN') {
+                returnsCount++;
+            }
+        });
+        
+        const totalCount = SYSTEM_ACTIVITY_FEED.length;
+        
+        // Update DOM
+        const salesEl = document.getElementById('activitySalesCount');
+        const inventoryEl = document.getElementById('activityInventoryCount');
+        const returnsEl = document.getElementById('activityReturnsCount');
+        const totalEl = document.getElementById('activityTotalCount');
+        
+        if (salesEl) salesEl.textContent = salesCount;
+        if (inventoryEl) inventoryEl.textContent = inventoryCount;
+        if (returnsEl) returnsEl.textContent = returnsCount;
+        if (totalEl) totalEl.textContent = totalCount;
+    }
+};
+
 // Globalize for environment compatibility (e.g. GitHub Pages)
 window.Inventory = Inventory;
 window.POS = POS;
 window.Ledger = Ledger;
 window.Returns = Returns;
 window.Dashboard = Dashboard;
+window.ActivityLog = ActivityLog;
 window.LogInterceptors = LogInterceptors;
 window.LogRenderers = LogRenderers;
 window.showLogDetail = showLogDetail;
@@ -2579,4 +2837,5 @@ document.addEventListener('DOMContentLoaded', () => {
     Inventory.init();
     Ledger.init();
     Returns.init();
+    ActivityLog.init();
 });

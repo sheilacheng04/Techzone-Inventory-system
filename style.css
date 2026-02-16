@@ -473,6 +473,224 @@ body {
 .profit-stat.margin .stat-value  { color: var(--accent); }
 
 /* ================================================
+   ANALYTICS VISUALIZATIONS
+   ================================================ */
+
+/* Section Dividers */
+.section-divider {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--accent);
+    margin: 32px 0 16px 0;
+    padding-bottom: 8px;
+    border-bottom: 2px solid rgba(108,92,231,.15);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.section-divider i { font-size: 1rem; }
+
+/* Analytics Grid */
+.analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+/* Analytics Cards */
+.analytics-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    transition: all 0.3s ease;
+}
+.analytics-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+    border-color: var(--accent);
+}
+.analytics-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.analytics-card-header h4 {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.analytics-card-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+.analytics-bar {
+    height: 8px;
+    background: rgba(108,92,231,.08);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 12px;
+}
+.analytics-bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.6s ease;
+}
+.analytics-card-stats {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 0.8rem;
+}
+.analytics-card-stats > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.analytics-card-stats small {
+    color: var(--text-muted);
+    font-size: 0.7rem;
+}
+.analytics-card-footer {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+.analytics-card-footer i {
+    color: var(--accent);
+}
+
+/* Chart Rows */
+.chart-row {
+    display: grid;
+    grid-template-columns: 200px 1fr 150px;
+    gap: 16px;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.2s ease;
+}
+.chart-row:hover {
+    background: rgba(108,92,231,.03);
+}
+.chart-row:last-child {
+    border-bottom: none;
+}
+.chart-row-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.chart-rank {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: var(--accent);
+    color: white;
+    border-radius: 50%;
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+.chart-row-bar {
+    position: relative;
+    height: 32px;
+    background: rgba(108,92,231,.06);
+    border-radius: 6px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+}
+.chart-bar-fill {
+    height: 100%;
+    border-radius: 6px;
+    transition: width 0.6s ease;
+    position: relative;
+}
+.chart-bar-value {
+    position: absolute;
+    right: 10px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text);
+    z-index: 2;
+}
+.chart-row-stat {
+    text-align: right;
+    font-size: 0.8rem;
+}
+.chart-row-stat small {
+    color: var(--text-muted);
+}
+
+/* Compact Tables */
+.compact-table {
+    font-size: 0.85rem;
+}
+.compact-table th {
+    padding: 10px 12px;
+    font-size: 0.75rem;
+}
+.compact-table td {
+    padding: 10px 12px;
+}
+
+/* Activity Stats Grid */
+.activity-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+}
+.activity-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: all 0.3s ease;
+}
+.activity-stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+.activity-stat-icon {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 1.5rem;
+}
+.activity-stat-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.activity-stat-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+.activity-stat-value {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--text);
+}
+
+/* ================================================
    POS LAYOUT
    ================================================ */
 .pos-layout {
@@ -1296,6 +1514,13 @@ body {
     .profit-stat { padding: 12px; }
     .profit-stat .stat-value { font-size: 1.15rem; }
 
+    /* Analytics */
+    .analytics-grid { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    .chart-row { grid-template-columns: 150px 1fr 120px; gap: 12px; padding: 10px; }
+    .chart-row-label { font-size: 0.85rem; }
+    .chart-rank { width: 24px; height: 24px; font-size: 0.7rem; }
+    .section-divider { font-size: 1rem; margin: 24px 0 12px 0; }
+
     /* Product grid */
     .product-grid { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; }
     .product-tile { padding: 12px 10px; }
@@ -1487,6 +1712,25 @@ body {
     .profit-stat { padding: 10px 8px; }
     .profit-stat .stat-value { font-size: .95rem; }
     .profit-stat .stat-label { font-size: .62rem; }
+
+    /* Analytics */
+    .analytics-grid { grid-template-columns: 1fr; gap: 10px; }
+    .analytics-card { padding: 12px; }
+    .analytics-card-value { font-size: 1.3rem; }
+    .analytics-card-stats { font-size: 0.7rem; }
+    .chart-row { 
+        grid-template-columns: 1fr; 
+        gap: 8px; 
+        padding: 10px;
+        text-align: left;
+    }
+    .chart-row-bar { height: 28px; margin-top: 6px; }
+    .chart-bar-value { font-size: 0.75rem; }
+    .chart-row-stat { text-align: left; margin-top: 4px; font-size: 0.75rem; }
+    .section-divider { font-size: 0.95rem; margin: 20px 0 10px 0; }
+    .compact-table { font-size: 0.75rem; }
+    .compact-table th { padding: 8px 6px; font-size: 0.7rem; }
+    .compact-table td { padding: 8px 6px; }
 
     /* Activity feed */
     .activity-feed-item { padding: 8px 10px; gap: 8px; }
