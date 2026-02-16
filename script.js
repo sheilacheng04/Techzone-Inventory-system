@@ -6,7 +6,24 @@
    simulated client-side for the frontend prototype.
    ================================================ */
 
+
+
+
+   
 // ========== MOCK DATA (from DDL / DML) ==========
+
+// Staff/User mappings for activity logging
+const STAFF_USERS = [
+    { user_id: 1, username: 'admin', role: 'Administrator' },
+    { user_id: 2, username: 'cashier_01', role: 'Cashier' },
+    { user_id: 3, username: 'cashier_02', role: 'Cashier' },
+    { user_id: 4, username: 'manager_01', role: 'Manager' },
+    { user_id: 5, username: 'staff', role: 'Staff' }
+];
+
+function getStaffInfo(username) {
+    return STAFF_USERS.find(s => s.username === username) || { user_id: 0, username: username, role: 'Staff' };
+}
 
 const ITEM_TYPES = [
     { id: 1, name: 'Processor', warranty: 365 },
@@ -141,6 +158,375 @@ function calculateWarrantyExpiration(saleDate, warrantyDays) {
 const RETURNS = [];
 let nextReturnId = 1;
 
+// ========== MONGODB LOG COLLECTIONS (Simulated) ==========
+
+// --- inventory_logs: tracks every stock movement ---
+const INVENTORY_LOGS = [
+    {
+        _id: 'invlog_001',
+        timestamp: new Date('2025-01-15T08:00:00Z'),
+        action: 'RESTOCK',
+        item_id: parseInt(1),
+        item_name: 'Ryzen 5 5600',
+        quantity_change: Number(50),
+        previous_stock: Number(0),
+        new_stock: Number(50),
+        performed_by: 'admin',
+        reference: 'PO-2025-001',
+        notes: 'Initial batch from AMD Phil'
+    },
+    {
+        _id: 'invlog_002',
+        timestamp: new Date('2025-01-15T08:15:00Z'),
+        action: 'RESTOCK',
+        item_id: parseInt(2),
+        item_name: 'RTX 4060',
+        quantity_change: Number(25),
+        previous_stock: Number(0),
+        new_stock: Number(25),
+        performed_by: 'admin',
+        reference: 'PO-2025-002',
+        notes: 'Initial batch from Asus Ph'
+    },
+    {
+        _id: 'invlog_003',
+        timestamp: new Date('2025-01-15T08:30:00Z'),
+        action: 'RESTOCK',
+        item_id: parseInt(3),
+        item_name: '8GB DDR4 RAM',
+        quantity_change: Number(100),
+        previous_stock: Number(0),
+        new_stock: Number(100),
+        performed_by: 'admin',
+        reference: 'PO-2025-003',
+        notes: 'Bulk restock from Kingston D.'
+    },
+    {
+        _id: 'invlog_004',
+        timestamp: new Date('2025-01-15T14:12:00Z'),
+        action: 'SALE',
+        item_id: parseInt(1),
+        item_name: 'Ryzen 5 5600',
+        quantity_change: Number(-1),
+        previous_stock: Number(50),
+        new_stock: Number(49),
+        performed_by: 'cashier_01',
+        reference: 'SALE-001',
+        notes: 'Sold to Juan Dela Cruz'
+    },
+    {
+        _id: 'invlog_005',
+        timestamp: new Date('2025-01-15T15:30:00Z'),
+        action: 'SALE',
+        item_id: parseInt(2),
+        item_name: 'RTX 4060',
+        quantity_change: Number(-1),
+        previous_stock: Number(25),
+        new_stock: Number(24),
+        performed_by: 'cashier_01',
+        reference: 'SALE-002',
+        notes: 'Sold to Maria Santos'
+    },
+    {
+        _id: 'invlog_006',
+        timestamp: new Date('2025-01-16T09:00:00Z'),
+        action: 'SALE',
+        item_id: parseInt(3),
+        item_name: '8GB DDR4 RAM',
+        quantity_change: Number(-2),
+        previous_stock: Number(100),
+        new_stock: Number(98),
+        performed_by: 'cashier_02',
+        reference: 'SALE-003',
+        notes: 'Sold 2 units to Jose Rizal'
+    },
+    {
+        _id: 'invlog_007',
+        timestamp: new Date('2025-01-20T11:00:00Z'),
+        action: 'RETURN',
+        item_id: parseInt(2),
+        item_name: 'RTX 4060',
+        quantity_change: Number(0),
+        previous_stock: Number(24),
+        new_stock: Number(24),
+        performed_by: 'manager_01',
+        reference: 'RETURN-001',
+        notes: 'Return from sale #2 - Defective, sent to defective bin'
+    },
+    {
+        _id: 'invlog_008',
+        timestamp: new Date('2025-01-22T14:30:00Z'),
+        action: 'RETURN',
+        item_id: parseInt(3),
+        item_name: '8GB DDR4 RAM',
+        quantity_change: Number(1),
+        previous_stock: Number(98),
+        new_stock: Number(99),
+        performed_by: 'manager_01',
+        reference: 'RETURN-002',
+        notes: 'Return from sale #3 - Wrong item, restocked'
+    },
+    {
+        _id: 'invlog_009',
+        timestamp: new Date('2025-01-25T16:15:00Z'),
+        action: 'RETURN',
+        item_id: parseInt(1),
+        item_name: 'Ryzen 5 5600',
+        quantity_change: Number(1),
+        previous_stock: Number(49),
+        new_stock: Number(50),
+        performed_by: 'admin',
+        reference: 'RETURN-003',
+        notes: 'Return from sale #1 - Change of mind, restocked'
+    }
+];
+
+// --- sales_logs: full sale records with nested customer & items ---
+const SALES_LOGS = [
+    {
+        _id: 'salelog_001',
+        timestamp: new Date('2025-01-15T14:12:00Z'),
+        sale_id: parseInt(1),
+        transaction_type: 'SALE',
+        customer: {
+            customer_id: parseInt(1),
+            name: 'Juan Dela Cruz',
+            phone: '0917-111-2222',
+            email: 'juan.dc@gmail.com',
+            city: 'Quezon City'
+        },
+        items: [
+            {
+                item_id: parseInt(1),
+                item_name: 'Ryzen 5 5600',
+                quantity: parseInt(1),
+                unit_price: Number(8500),
+                line_total: Number(8500),
+                cost: Number(6500),
+                profit: Number(2000)
+            }
+        ],
+        total_amount: Number(8500),
+        total_profit: Number(2000),
+        payment_method: 'Cash',
+        processed_by: 'cashier_01'
+    },
+    {
+        _id: 'salelog_002',
+        timestamp: new Date('2025-01-15T15:30:00Z'),
+        sale_id: parseInt(2),
+        transaction_type: 'SALE',
+        customer: {
+            customer_id: parseInt(2),
+            name: 'Maria Santos',
+            phone: '0918-222-3333',
+            email: 'maria.santos@yahoo.com',
+            city: 'Makati City'
+        },
+        items: [
+            {
+                item_id: parseInt(2),
+                item_name: 'RTX 4060',
+                quantity: parseInt(1),
+                unit_price: Number(18500),
+                line_total: Number(18500),
+                cost: Number(16000),
+                profit: Number(2500)
+            }
+        ],
+        total_amount: Number(18500),
+        total_profit: Number(2500),
+        payment_method: 'Card',
+        processed_by: 'cashier_01'
+    },
+    {
+        _id: 'salelog_003',
+        timestamp: new Date('2025-01-16T09:00:00Z'),
+        sale_id: parseInt(3),
+        transaction_type: 'SALE',
+        customer: {
+            customer_id: parseInt(3),
+            name: 'Jose Rizal',
+            phone: '0919-333-4444',
+            email: 'j.rizal@gmail.com',
+            city: 'Manila'
+        },
+        items: [
+            {
+                item_id: parseInt(3),
+                item_name: '8GB DDR4 RAM',
+                quantity: parseInt(2),
+                unit_price: Number(1500),
+                line_total: Number(3000),
+                cost: Number(1800),
+                profit: Number(1200)
+            }
+        ],
+        total_amount: Number(3000),
+        total_profit: Number(1200),
+        payment_method: 'Cash',
+        processed_by: 'cashier_02'
+    }
+];
+
+// --- return_logs: return operations ---
+const RETURN_LOGS = [
+    {
+        _id: 'retlog_001',
+        timestamp: new Date('2025-01-20T11:00:00Z'),
+        return_id: parseInt(1),
+        original_sale_id: parseInt(2),
+        item_id: parseInt(2),
+        item_name: 'RTX 4060',
+        quantity_returned: parseInt(1),
+        reason: 'Defective',
+        disposition: 'Defective Bin',
+        refund_amount: Number(18500),
+        restocked: false,
+        approved_by: 'manager_01',
+        customer_name: 'Maria Santos',
+        notes: 'GPU issue detected during testing - no restock'
+    },
+    {
+        _id: 'retlog_002',
+        timestamp: new Date('2025-01-22T14:30:00Z'),
+        return_id: parseInt(2),
+        original_sale_id: parseInt(3),
+        item_id: parseInt(3),
+        item_name: '8GB DDR4 RAM',
+        quantity_returned: parseInt(1),
+        reason: 'Wrong Item',
+        disposition: 'Returned to Stock',
+        refund_amount: Number(1500),
+        restocked: true,
+        approved_by: 'manager_01',
+        customer_name: 'Jose Rizal',
+        notes: 'Customer ordered DDR5, mistakenly received DDR4 - restocked'
+    },
+    {
+        _id: 'retlog_003',
+        timestamp: new Date('2025-01-25T16:15:00Z'),
+        return_id: parseInt(3),
+        original_sale_id: parseInt(1),
+        item_id: parseInt(1),
+        item_name: 'Ryzen 5 5600',
+        quantity_returned: parseInt(1),
+        reason: 'Change of Mind',
+        disposition: 'Returned to Stock',
+        refund_amount: Number(8500),
+        restocked: true,
+        approved_by: 'admin',
+        customer_name: 'Juan Dela Cruz',
+        notes: 'Customer decided to upgrade to Ryzen 7 - restocked full refund'
+    }
+];
+
+// ========== UNIFIED SYSTEM ACTIVITY FEED ==========
+// Consolidated log from ALL modules: POS, Inventory, Ledger, Returns
+// Schema: _id, user_id, username, role, action, reference_id, created_at
+
+const SYSTEM_ACTIVITY_FEED = [
+    {
+        _id: 'activity_001',
+        user_id: 1,
+        username: 'admin',
+        role: 'Administrator',
+        action: 'RESTOCK_ITEM',
+        reference_id: 1,
+        created_at: new Date('2025-01-15T08:00:00Z'),
+        details: 'Restocked 50 units of Ryzen 5 5600 from supplier AMD Phil'
+    },
+    {
+        _id: 'activity_002',
+        user_id: 1,
+        username: 'admin',
+        role: 'Administrator',
+        action: 'RESTOCK_ITEM',
+        reference_id: 2,
+        created_at: new Date('2025-01-15T08:15:00Z'),
+        details: 'Restocked 25 units of RTX 4060 from supplier Asus Ph'
+    },
+    {
+        _id: 'activity_003',
+        user_id: 1,
+        username: 'admin',
+        role: 'Administrator',
+        action: 'RESTOCK_ITEM',
+        reference_id: 3,
+        created_at: new Date('2025-01-15T08:30:00Z'),
+        details: 'Restocked 100 units of 8GB DDR4 RAM from supplier Kingston D.'
+    },
+    {
+        _id: 'activity_004',
+        user_id: 2,
+        username: 'cashier_01',
+        role: 'Cashier',
+        action: 'PROCESS_SALE',
+        reference_id: 1,
+        created_at: new Date('2025-01-15T14:12:00Z'),
+        details: 'Processed sale #1 to Juan Dela Cruz - 1x Ryzen 5 5600 (₱8,500)'
+    },
+    {
+        _id: 'activity_005',
+        user_id: 2,
+        username: 'cashier_01',
+        role: 'Cashier',
+        action: 'PROCESS_SALE',
+        reference_id: 2,
+        created_at: new Date('2025-01-15T15:30:00Z'),
+        details: 'Processed sale #2 to Maria Santos - 1x RTX 4060 (₱18,500)'
+    },
+    {
+        _id: 'activity_006',
+        user_id: 3,
+        username: 'cashier_02',
+        role: 'Cashier',
+        action: 'PROCESS_SALE',
+        reference_id: 3,
+        created_at: new Date('2025-01-16T09:00:00Z'),
+        details: 'Processed sale #3 to Jose Rizal - 2x 8GB DDR4 RAM (₱3,000)'
+    },
+    {
+        _id: 'activity_007',
+        user_id: 4,
+        username: 'manager_01',
+        role: 'Manager',
+        action: 'APPROVE_RETURN',
+        reference_id: 1,
+        created_at: new Date('2025-01-20T11:00:00Z'),
+        details: 'Approved return #1 for 1x RTX 4060 from sale #2 (Maria Santos) - Defective - Refund: ₱18,500'
+    },
+    {
+        _id: 'activity_008',
+        user_id: 4,
+        username: 'manager_01',
+        role: 'Manager',
+        action: 'APPROVE_RETURN',
+        reference_id: 2,
+        created_at: new Date('2025-01-22T14:30:00Z'),
+        details: 'Approved return #2 for 1x 8GB DDR4 RAM from sale #3 (Jose Rizal) - Wrong item - Refund: ₱1,500'
+    },
+    {
+        _id: 'activity_009',
+        user_id: 1,
+        username: 'admin',
+        role: 'Administrator',
+        action: 'APPROVE_RETURN',
+        reference_id: 3,
+        created_at: new Date('2025-01-25T16:15:00Z'),
+        details: 'Approved return #3 for 1x Ryzen 5 5600 from sale #1 (Juan Dela Cruz) - Change of mind - Refund: ₱8,500'
+    }
+];
+
+// Deprecated: SYSTEM_ACTIVITY_LOGS (kept for backward compatibility during migration)
+const SYSTEM_ACTIVITY_LOGS = SYSTEM_ACTIVITY_FEED;
+
+// Log ID counters
+let nextInventoryLogId = INVENTORY_LOGS.length + 1;
+let nextSalesLogId = SALES_LOGS.length + 1;
+let nextReturnLogId = RETURN_LOGS.length + 1;
+let nextSystemLogId = SYSTEM_ACTIVITY_LOGS.length + 1;
+
 // ========== UTILITY HELPERS ==========
 
 const LOW_STOCK_THRESHOLD = 10;
@@ -205,6 +591,7 @@ const Dashboard = {
         this.renderAlerts();
         this.renderProfit();
         this.renderTopProducts();
+        LogRenderers.renderActivityFeed();
     },
 
     renderKPIs() {
@@ -294,7 +681,7 @@ const Dashboard = {
         const sorted = Object.entries(productMap)
             .map(([id, data]) => ({ item: getItem(Number(id)), ...data }))
             .filter(x => x.item)
-            .sort((a, b) => b.revenue - a.revenue)
+            .sort((a, b) => b.units - a.units)
             .slice(0, 10);
 
         document.getElementById('topProductsBody').innerHTML = sorted.map(p => `
@@ -515,6 +902,7 @@ const POS = {
         const customerPhone = document.getElementById('customerPhone').value.trim();
         const customerEmail = document.getElementById('customerEmail').value.trim();
         const customerAddress = document.getElementById('customerAddress').value.trim();
+        const processedByUsername = document.getElementById('posCashier').value.trim();
 
         // Validate required fields
         if (!customerName) {
@@ -523,6 +911,10 @@ const POS = {
         }
         if (!customerPhone) {
             showToast('Please enter customer phone', 'warning');
+            return;
+        }
+        if (!processedByUsername) {
+            showToast('Please select a cashier', 'warning');
             return;
         }
 
@@ -589,6 +981,23 @@ const POS = {
         document.getElementById('saleReceipt').innerHTML = receiptHTML;
         document.getElementById('saleModal').classList.add('show');
 
+        // ===== PREPARE LOG DATA BEFORE CLEARING CART =====
+        const logItems = this.cart.map(entry => {
+            const item = getItem(entry.itemId);
+            return {
+                item_id: entry.itemId,
+                item_name: item ? item.name : 'Unknown',
+                quantity: entry.qty,
+                unit_price: entry.price,
+                line_total: entry.price * entry.qty,
+                cost: item ? item.cost : 0,
+                profit: (entry.price - (item ? item.cost : 0)) * entry.qty
+            };
+        });
+
+        const itemsDescription = logItems.map(i => `${i.quantity}x ${i.item_name}`).join(', ');
+        const staffInfo = getStaffInfo(processedByUsername);
+
         // Reset
         this.cart = [];
         this.renderCart();
@@ -605,6 +1014,62 @@ const POS = {
         Dashboard.init();
         Ledger.init();
         Returns.init();
+
+        // === LOG INTERCEPTOR: Auto-generate sales_log + inventory_logs ===
+
+        // Sales Log (with nested customer + items)
+        LogInterceptors.createSalesLog({
+            sale_id: saleId,
+            customer: {
+                customer_id: 0,
+                name: customerName,
+                phone: customerPhone,
+                email: customerEmail,
+                city: customerAddress
+            },
+            items: logItems,
+            total_amount: total,
+            total_profit: logItems.reduce((s, i) => s + i.profit, 0),
+            payment_method: 'Cash',
+            processed_by: processedByUsername
+        });
+
+        // Inventory Logs (one per cart line — stock decrease)
+        logItems.forEach(logItem => {
+            const item = getItem(logItem.item_id);
+            if (item) {
+                LogInterceptors.createInventoryLog({
+                    action: 'SALE',
+                    item_id: logItem.item_id,
+                    item_name: logItem.item_name,
+                    quantity_change: -logItem.quantity,
+                    previous_stock: logItem.quantity + item.qty, // was already deducted above
+                    new_stock: item.qty,
+                    performed_by: processedByUsername,
+                    reference: 'SALE-' + saleId,
+                    notes: 'Sold to ' + customerName
+                });
+            }
+        });
+
+        // === UNIFIED ACTIVITY FEED LOG ===
+        LogInterceptors.createActivityLog({
+            user_id: staffInfo.user_id,
+            username: staffInfo.username,
+            role: staffInfo.role,
+            action: 'PROCESS_SALE',
+            reference_id: saleId,
+            details: `Processed sale #${saleId} to ${customerName} - ${itemsDescription} (${peso(total)})`
+        });
+
+        // System Activity Log (legacy)
+        LogInterceptors.createSystemActivityLog({
+            event_type: 'Sale Processed',
+            user: 'cashier_01',
+            details: `Sale #${saleId} — ${logItems.length} item(s), total ${peso(total)} to ${customerName}`,
+            severity: 'success'
+        });
+        // === END LOG INTERCEPTOR ===
 
         // Check new low stock alerts
         const newLow = ITEMS.filter(i => i.qty > 0 && i.qty <= LOW_STOCK_THRESHOLD);
@@ -678,6 +1143,7 @@ const Inventory = {
         const qty = Number(document.getElementById('productQty').value);
         const price = Number(document.getElementById('productPrice').value);
         const cost = Number(document.getElementById('productCost').value);
+        const staffUsername = document.getElementById('productStaff').value.trim();
 
         // Validation
         if (!name) {
@@ -700,6 +1166,10 @@ const Inventory = {
             showToast('Cost cannot be negative', 'warning');
             return;
         }
+        if (!staffUsername) {
+            showToast('Please select a staff member', 'warning');
+            return;
+        }
 
         if (editId) {
             // Edit existing product
@@ -712,6 +1182,17 @@ const Inventory = {
                 item.price = price;
                 item.cost = cost;
                 showToast(`Product "${name}" updated successfully`, 'success');
+
+                // === UNIFIED ACTIVITY FEED LOG ===
+                const staffInfo = getStaffInfo(staffUsername);
+                LogInterceptors.createActivityLog({
+                    user_id: staffInfo.user_id,
+                    username: staffInfo.username,
+                    role: staffInfo.role,
+                    action: 'UPDATE_PRODUCT',
+                    reference_id: Number(editId),
+                    details: `Updated product "${name}" - Category: ${ITEM_TYPES.find(t => t.id === typeId)?.name || 'Unknown'}, Price: ${peso(price)}`
+                });
             }
         } else {
             // Add new product
@@ -726,6 +1207,17 @@ const Inventory = {
                 cost
             });
             showToast(`Product "${name}" added successfully`, 'success');
+
+            // === UNIFIED ACTIVITY FEED LOG ===
+            const staffInfo = getStaffInfo(staffUsername);
+            LogInterceptors.createActivityLog({
+                user_id: staffInfo.user_id,
+                username: staffInfo.username,
+                role: staffInfo.role,
+                action: 'ADD_PRODUCT',
+                reference_id: newId,
+                details: `Added new product "${name}" - Category: ${ITEM_TYPES.find(t => t.id === typeId)?.name || 'Unknown'}, Price: ${peso(price)}, Qty: ${qty}`
+            });
         }
 
         this.cancelEdit();
@@ -773,6 +1265,7 @@ const Inventory = {
         document.getElementById('productPrice').value = '';
         document.getElementById('productCost').value = '';
         document.getElementById('productMargin').value = '';
+        document.getElementById('productStaff').value = '';
 
         document.getElementById('productFormTitle').textContent = 'Add New Product';
         document.getElementById('productSaveBtn').textContent = 'Add Product';
@@ -821,6 +1314,7 @@ const Inventory = {
     addStock() {
         const productId = Number(document.getElementById('addStockProductId').value);
         const qtyToAdd = Number(document.getElementById('addStockQty').value);
+        const staffUsername = document.getElementById('stockStaff').value.trim();
 
         if (!productId) {
             showToast('Please select a product from the list', 'warning');
@@ -829,6 +1323,11 @@ const Inventory = {
 
         if (qtyToAdd <= 0) {
             showToast('Quantity must be greater than 0', 'warning');
+            return;
+        }
+
+        if (!staffUsername) {
+            showToast('Please select a staff member', 'warning');
             return;
         }
 
@@ -841,11 +1340,44 @@ const Inventory = {
         const oldQty = item.qty;
         item.qty += qtyToAdd;
 
+        // === LOG INTERCEPTOR: inventory_log for restock ===
+        LogInterceptors.createInventoryLog({
+            action: 'RESTOCK',
+            item_id: productId,
+            item_name: item.name,
+            quantity_change: qtyToAdd,
+            previous_stock: oldQty,
+            new_stock: item.qty,
+            performed_by: staffUsername,
+            reference: 'MANUAL-RESTOCK',
+            notes: `Manual restock of ${qtyToAdd} units`
+        });
+
+        LogInterceptors.createSystemActivityLog({
+            event_type: 'Stock Updated',
+            user: staffUsername,
+            details: `Restocked ${item.name}: ${oldQty} → ${item.qty} (+${qtyToAdd})`,
+            severity: 'info'
+        });
+
+        // === UNIFIED ACTIVITY FEED LOG ===
+        const staffInfo = getStaffInfo(staffUsername);
+        LogInterceptors.createActivityLog({
+            user_id: staffInfo.user_id,
+            username: staffInfo.username,
+            role: staffInfo.role,
+            action: 'RESTOCK_ITEM',
+            reference_id: productId,
+            details: `Restocked ${qtyToAdd} units of ${item.name} - Stock updated: ${oldQty} → ${item.qty}`
+        });
+        // === END LOG INTERCEPTOR ===
+
         // Reset form
         document.getElementById('addStockSearch').value = '';
         document.getElementById('addStockProductId').value = '';
         document.getElementById('currentStock').value = '';
         document.getElementById('addStockQty').value = 1;
+        document.getElementById('stockStaff').value = '';
 
         // Refresh displays
         this.render();
@@ -857,6 +1389,7 @@ const Inventory = {
 
     render() {
         const body = document.getElementById('inventoryBody');
+        LogRenderers.renderInventoryLogs();
         body.innerHTML = ITEMS.map(item => {
             const type = getType(item.typeId);
             const supplier = getSupplier(item.supplierId);
@@ -937,6 +1470,7 @@ const Inventory = {
 const Ledger = {
     init() {
         this.render();
+        LogRenderers.renderSalesLogs();
     },
 
     render() {
@@ -1343,6 +1877,7 @@ const Returns = {
         const itemSelect = document.getElementById('returnItem');
         const qtyInput = document.getElementById('returnQty');
         const reasonSelect = document.getElementById('returnReason');
+        const approverSelect = document.getElementById('returnApprover');
         const submitBtn = document.getElementById('submitReturnBtn');
 
         itemSelect.innerHTML = '<option value="">-- Select Item --</option>';
@@ -1351,6 +1886,7 @@ const Returns = {
             itemSelect.disabled = true;
             qtyInput.disabled = true;
             reasonSelect.disabled = true;
+            approverSelect.disabled = true;
             submitBtn.disabled = true;
             return;
         }
@@ -1364,6 +1900,7 @@ const Returns = {
         itemSelect.disabled = false;
         qtyInput.disabled = false;
         reasonSelect.disabled = false;
+        approverSelect.disabled = false;
         submitBtn.disabled = false;
     },
 
@@ -1372,9 +1909,15 @@ const Returns = {
         const saleItemId = Number(document.getElementById('returnItem').value);
         const qty = Number(document.getElementById('returnQty').value);
         const reason = document.getElementById('returnReason').value;
+        const approverUsername = document.getElementById('returnApprover').value.trim();
 
         if (!saleId || !saleItemId || qty < 1) {
             showToast('Please fill in all return fields', 'warning');
+            return;
+        }
+
+        if (!approverUsername) {
+            showToast('Please select an approver', 'warning');
             return;
         }
 
@@ -1436,6 +1979,58 @@ const Returns = {
         
         RETURNS.push(returnRecord);
 
+        // === LOG INTERCEPTOR: Auto-generate return_log + system_activity_log ===
+        const customerNameForLog = sale?.customerData?.name || (sale?.customerId ? (getCustomer(sale.customerId)?.name || 'Walk-in') : 'Walk-in');
+
+        LogInterceptors.createReturnLog({
+            return_id: returnRecord.id,
+            original_sale_id: saleId,
+            item_id: saleItem.itemId,
+            item_name: item ? item.name : 'Unknown',
+            quantity_returned: qty,
+            reason,
+            disposition,
+            refund_amount: returnedAmount,
+            restocked,
+            approved_by: approverUsername,
+            customer_name: customerNameForLog,
+            notes: `Return for Sale #${saleId} — ${reason}`
+        });
+
+        // Inventory log if restocked
+        if (restocked && item) {
+            LogInterceptors.createInventoryLog({
+                action: 'RETURN',
+                item_id: saleItem.itemId,
+                item_name: item.name,
+                quantity_change: qty,
+                previous_stock: item.qty - qty,
+                new_stock: item.qty,
+                performed_by: approverUsername,
+                reference: 'RET-' + returnRecord.id,
+                notes: `Restocked from Return #${returnRecord.id}`
+            });
+        }
+
+        LogInterceptors.createSystemActivityLog({
+            event_type: 'Return Approved',
+            user: approverUsername,
+            details: `Return #${returnRecord.id} approved — ${qty}x ${item ? item.name : 'item'} ${restocked ? 'restocked' : 'sent to defective bin'}`,
+            severity: 'warning'
+        });
+
+        // === UNIFIED ACTIVITY FEED LOG ===
+        const staffInfo = getStaffInfo(approverUsername);
+        LogInterceptors.createActivityLog({
+            user_id: staffInfo.user_id,
+            username: staffInfo.username,
+            role: staffInfo.role,
+            action: 'APPROVE_RETURN',
+            reference_id: returnRecord.id,
+            details: `Approved return #${returnRecord.id} for ${qty}x ${item ? item.name : 'item'} from sale #${saleId} - ${reason} - Refund: ${peso(returnedAmount)}`
+        });
+        // === END LOG INTERCEPTOR ===
+
         const restockMsg = restocked ? 'restocked' : 'sent to defective bin';
         showToast(`Return processed — ${qty} x ${item ? item.name : 'item'} ${restockMsg}`, 'success');
 
@@ -1446,6 +2041,8 @@ const Returns = {
         document.getElementById('returnQty').value = 1;
         document.getElementById('returnQty').disabled = true;
         document.getElementById('returnReason').disabled = true;
+        document.getElementById('returnApprover').value = '';
+        document.getElementById('returnApprover').disabled = true;
         document.getElementById('submitReturnBtn').disabled = true;
 
         this.renderHistory();
@@ -1456,6 +2053,7 @@ const Returns = {
     },
 
     renderHistory() {
+        LogRenderers.renderReturnLogs();
         const body = document.getElementById('returnsBody');
         if (RETURNS.length === 0) {
             body.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--text-muted);padding:24px;">No returns recorded yet</td></tr>';
@@ -1478,7 +2076,491 @@ const Returns = {
     }
 };
 
+// ========== LOG INTERCEPTORS — Automated Multi-DB Inserts ==========
+
+const LogInterceptors = {
+    // --- Data cleaning helpers (strict MongoDB $jsonSchema compliance) ---
+    cleanString(val) { return String(val || '').trim(); },
+    cleanNumber(val) { return parseFloat(val) || 0; },
+    cleanInt(val) { return parseInt(val, 10) || 0; },
+    cleanDate(val) { return new Date(val || Date.now()); },
+
+    // Generate a pseudo ObjectId
+    objectId(prefix) {
+        return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+    },
+
+    // --- Inventory Log Creator ---
+    createInventoryLog({ action, item_id, item_name, quantity_change, previous_stock, new_stock, performed_by, reference, notes }) {
+        const log = {
+            _id: this.objectId('invlog'),
+            timestamp: this.cleanDate(new Date()),
+            action: this.cleanString(action),
+            item_id: this.cleanInt(item_id),
+            item_name: this.cleanString(item_name),
+            quantity_change: this.cleanNumber(quantity_change),
+            previous_stock: this.cleanInt(previous_stock),
+            new_stock: this.cleanInt(new_stock),
+            performed_by: this.cleanString(performed_by || 'staff'),
+            reference: this.cleanString(reference),
+            notes: this.cleanString(notes)
+        };
+        INVENTORY_LOGS.unshift(log);
+        return log;
+    },
+
+    // --- Sales Log Creator (nested customer + items array) ---
+    createSalesLog({ sale_id, customer, items, total_amount, total_profit, payment_method, processed_by }) {
+        const cleanItems = (items || []).map(i => ({
+            item_id: this.cleanInt(i.item_id),
+            item_name: this.cleanString(i.item_name),
+            quantity: this.cleanInt(i.quantity),
+            unit_price: this.cleanNumber(i.unit_price),
+            line_total: this.cleanNumber(i.line_total),
+            cost: this.cleanNumber(i.cost),
+            profit: this.cleanNumber(i.profit)
+        }));
+        const log = {
+            _id: this.objectId('salelog'),
+            timestamp: this.cleanDate(new Date()),
+            sale_id: this.cleanInt(sale_id),
+            transaction_type: 'SALE',
+            customer: {
+                customer_id: this.cleanInt(customer.customer_id || 0),
+                name: this.cleanString(customer.name),
+                phone: this.cleanString(customer.phone),
+                email: this.cleanString(customer.email),
+                city: this.cleanString(customer.city || customer.address)
+            },
+            items: cleanItems,
+            total_amount: this.cleanNumber(total_amount),
+            total_profit: this.cleanNumber(total_profit),
+            payment_method: this.cleanString(payment_method || 'Cash'),
+            processed_by: this.cleanString(processed_by || 'cashier_01')
+        };
+        SALES_LOGS.unshift(log);
+        return log;
+    },
+
+    // --- Return Log Creator ---
+    createReturnLog({ return_id, original_sale_id, item_id, item_name, quantity_returned, reason, disposition, refund_amount, restocked, approved_by, customer_name, notes }) {
+        const log = {
+            _id: this.objectId('retlog'),
+            timestamp: this.cleanDate(new Date()),
+            return_id: this.cleanInt(return_id),
+            original_sale_id: this.cleanInt(original_sale_id),
+            item_id: this.cleanInt(item_id),
+            item_name: this.cleanString(item_name),
+            quantity_returned: this.cleanInt(quantity_returned),
+            reason: this.cleanString(reason),
+            disposition: this.cleanString(disposition),
+            refund_amount: this.cleanNumber(refund_amount),
+            restocked: Boolean(restocked),
+            approved_by: this.cleanString(approved_by || 'manager_01'),
+            customer_name: this.cleanString(customer_name),
+            notes: this.cleanString(notes)
+        };
+        RETURN_LOGS.unshift(log);
+        return log;
+    },
+
+    // --- System Activity Log Creator (Unified Feed) ---
+    createSystemActivityLog({ event_type, user, ip_address, details, severity }) {
+        const log = {
+            _id: this.objectId('syslog'),
+            timestamp: this.cleanDate(new Date()),
+            event_type: this.cleanString(event_type),
+            user: this.cleanString(user || 'system'),
+            ip_address: this.cleanString(ip_address || '192.168.1.' + Math.floor(Math.random() * 254 + 1)),
+            details: this.cleanString(details),
+            severity: this.cleanString(severity || 'info')
+        };
+        SYSTEM_ACTIVITY_LOGS.unshift(log);
+        return log;
+    },
+
+    // --- Unified Activity Feed Creator ---
+    // Logs to the consolidated SYSTEM_ACTIVITY_FEED used by all modules
+    createActivityLog({ user_id = 1, username = 'staff', role = 'Staff', action = 'ACTION', reference_id = 0, details = '' }) {
+        const activity = {
+            _id: this.objectId('activity'),
+            user_id: this.cleanInt(user_id),
+            username: this.cleanString(username),
+            role: this.cleanString(role),
+            action: this.cleanString(action),
+            reference_id: this.cleanInt(reference_id),
+            created_at: this.cleanDate(new Date()),
+            details: this.cleanString(details)
+        };
+        SYSTEM_ACTIVITY_FEED.unshift(activity);
+        return activity;
+    }
+};
+
+// ========== UNIFIED LOG ACCESSOR & DISPATCHER ==========
+
+function showLogDetail(type, id) {
+    switch(type) {
+        case 'inventory':
+            LogRenderers.showInventoryLogDetail(id);
+            break;
+        case 'sales':
+            LogRenderers.showSalesLogDetail(id);
+            break;
+        case 'return':
+            LogRenderers.showReturnLogDetail(id);
+            break;
+        case 'activity':
+            LogRenderers.showActivityLogDetail(id);
+            break;
+        default:
+            console.warn('Unknown log type:', type);
+    }
+}
+
+// ========== LOG RENDERING HELPERS ==========
+
+const LogRenderers = {
+    // --- Inventory Movement Logs (for Inventory View) ---
+    renderInventoryLogs() {
+        const body = document.getElementById('inventoryLogsBody');
+        if (!body) return;
+        // INVENTORY_LOGS already newest-first due to unshift()
+        const sorted = INVENTORY_LOGS;
+        if (sorted.length === 0) {
+            body.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:24px;">No inventory movements recorded</td></tr>';
+            return;
+        }
+        body.innerHTML = sorted.map(log => {
+            const isPositive = log.quantity_change > 0;
+            const changeColor = isPositive ? 'var(--green)' : 'var(--red)';
+            const changePrefix = isPositive ? '+' : '';
+            const actionBadge = log.action === 'RESTOCK' ? 'badge-ok' : (log.action === 'SALE' ? 'badge-low' : 'badge-out');
+            const ts = new Date(log.timestamp);
+            
+            // Build action description
+            const changeText = `${changePrefix}${log.quantity_change}`;
+            const actionDesc = `${log.action}: ${changeText} of ${log.item_name} (${log.previous_stock} → ${log.new_stock})`;
+            
+            return `
+            <tr class="log-row clickable" onclick="showLogDetail('inventory', '${log._id}')">
+                <td style="font-size:.78rem;color:var(--text-muted);">${ts.toLocaleDateString('en-PH')} ${ts.toLocaleTimeString('en-PH', {hour:'2-digit',minute:'2-digit'})}</td>
+                <td><span class="badge ${actionBadge}">${log.action}</span></td>
+                <td><strong>${log.item_name}</strong></td>
+                <td style="color:${changeColor};font-weight:600;">${changePrefix}${log.quantity_change}</td>
+                <td>${log.previous_stock}</td>
+                <td>${log.new_stock}</td>
+                <td style="font-size:.78rem;color:var(--text-secondary);">${actionDesc}</td>
+                <td style="font-size:.78rem;color:var(--text-muted);">${log.performed_by}</td>
+                <td>
+                    <button class="btn-info-circle" onclick="event.stopPropagation();showLogDetail('inventory', '${log._id}')" title="Details">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </td>
+            </tr>`;
+        }).join('');
+    },
+
+    // --- Return Logs (for Returns View) ---
+    renderReturnLogs() {
+        const body = document.getElementById('returnLogsBody');
+        if (!body) return;
+        const sorted = [...RETURN_LOGS].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        if (sorted.length === 0) {
+            body.innerHTML = '<tr><td colspan="10" style="text-align:center;color:var(--text-muted);padding:24px;">No return logs recorded</td></tr>';
+            return;
+        }
+        body.innerHTML = sorted.map(log => {
+            const dispositionColor = log.restocked ? 'var(--green)' : 'var(--red)';
+            const ts = new Date(log.timestamp);
+            
+            // Build action description
+            const actionDesc = `${log.quantity_returned}x ${log.item_name} returned - ${log.reason} (${log.disposition})`;
+            
+            return `
+            <tr class="log-row clickable" onclick="showLogDetail('return', '${log._id}')">
+                <td>${log.return_id}</td>
+                <td>${log.original_sale_id}</td>
+                <td><strong>${log.item_name}</strong></td>
+                <td>${log.quantity_returned}</td>
+                <td>${log.reason}</td>
+                <td style="color:${dispositionColor};font-weight:600;">${log.disposition}</td>
+                <td style="color:var(--red);">${peso(log.refund_amount)}</td>
+                <td style="font-size:.78rem;color:var(--text-secondary);">${actionDesc}</td>
+                <td style="font-size:.78rem;">${log.approved_by}</td>
+                <td>
+                    <button class="btn-info-circle" onclick="event.stopPropagation();showLogDetail('return', '${log._id}')" title="Details">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </td>
+            </tr>`;
+        }).join('');
+    },
+
+    // --- Sales Logs (for Ledger View — View Details modal) ---
+    renderSalesLogs() {
+        const body = document.getElementById('salesLogsBody');
+        if (!body) return;
+        // SALES_LOGS already newest-first due to unshift()
+        const sorted = SALES_LOGS;
+        if (sorted.length === 0) {
+            body.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--text-muted);padding:24px;">No sales logs recorded</td></tr>';
+            return;
+        }
+        body.innerHTML = sorted.map(log => {
+            const ts = new Date(log.timestamp);
+            
+            // Build action description
+            const itemsList = log.items.map(i => `${i.quantity}x ${i.item_name}`).join(', ');
+            const actionDesc = `Sale to ${log.customer.name} - ${itemsList} (${peso(log.total_amount)})`;
+            
+            return `
+            <tr class="log-row clickable" onclick="showLogDetail('sales', '${log._id}')">
+                <td>${log.sale_id}</td>
+                <td style="font-size:.78rem;">${ts.toLocaleDateString('en-PH')} ${ts.toLocaleTimeString('en-PH', {hour:'2-digit',minute:'2-digit'})}</td>
+                <td><strong>${log.customer.name}</strong></td>
+                <td>${log.items.length}</td>
+                <td>${peso(log.total_amount)}</td>
+                <td style="color:var(--green);">${peso(log.total_profit)}</td>
+                <td style="font-size:.78rem;color:var(--text-secondary);">${actionDesc}</td>
+                <td style="font-size:.78rem;color:var(--text-muted);">${log.processed_by}</td>
+                <td>
+                    <button class="btn btn-sm btn-ghost" onclick="event.stopPropagation();showLogDetail('sales', '${log._id}')" style="font-size:.72rem;">
+                        <i class="fas fa-eye"></i> View Details
+                    </button>
+                </td>
+            </tr>`;
+        }).join('');
+    },
+
+    // --- Unified System Activity Feed (Dashboard — last 10 from all modules) ---
+    renderActivityFeed() {
+        const container = document.getElementById('activityFeedBody');
+        if (!container) return;
+        
+        const sorted = [...SYSTEM_ACTIVITY_FEED].sort((a, b) => new Date(b.created_at) - new Date(a.created_at)).slice(0, 10);
+        
+        if (sorted.length === 0) {
+            container.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:24px;">No recent activity</div>';
+            return;
+        }
+        
+        container.innerHTML = sorted.map(log => {
+            const ts = new Date(log.created_at);
+            
+            // Action-based icon mapping
+            const actionIcons = {
+                'PROCESS_SALE': 'fa-cash-register',
+                'RESTOCK_ITEM': 'fa-boxes-stacked',
+                'PROCESS_RETURN': 'fa-rotate-left',
+                'APPROVE_RETURN': 'fa-check-circle',
+                'DELETE_PRODUCT': 'fa-trash-can',
+                'UPDATE_INVENTORY': 'fa-sync',
+                'USER_LOGIN': 'fa-right-to-bracket',
+                'USER_LOGOUT': 'fa-right-from-bracket',
+                'ADJUST_STOCK': 'fa-square-plus'
+            };
+            
+            // Role-based color coding
+            const roleColors = {
+                'Administrator': 'var(--red)',
+                'Manager': 'var(--orange)',
+                'Cashier': 'var(--blue)',
+                'Staff': 'var(--green)',
+                'System': 'var(--text-muted)'
+            };
+            
+            const icon = actionIcons[log.action] || 'fa-circle-check';
+            const color = roleColors[log.role] || 'var(--text-secondary)';
+            const roleDisplay = log.role || 'Unknown Role';
+            
+            return `
+            <div class="activity-feed-item clickable" onclick="showActivityLogDetail('${log._id}')">
+                <div class="activity-icon" style="color:${color};"><i class="fas ${icon}"></i></div>
+                <div class="activity-body">
+                    <div class="activity-title">${log.action} <span class="activity-user" style="font-size:.78rem;">— ${log.username} <span style="color:var(--text-muted);">(${roleDisplay})</span></span></div>
+                    <div class="activity-detail">${log.details || 'Activity reference: ' + log.reference_id}</div>
+                    <div class="activity-time">${ts.toLocaleDateString('en-PH')} ${ts.toLocaleTimeString('en-PH', {hour:'2-digit',minute:'2-digit'})}</div>
+                </div>
+                <div class="activity-arrow"><i class="fas fa-chevron-right"></i></div>
+            </div>`;
+        }).join('');
+    },
+
+    // ======== Detail Modals ========
+
+    showLogDetailModal(title, contentHTML) {
+        document.getElementById('logDetailTitle').textContent = title;
+        document.getElementById('logDetailContent').innerHTML = contentHTML;
+        document.getElementById('logDetailModal').classList.add('show');
+    },
+
+    closeLogDetailModal() {
+        document.getElementById('logDetailModal').classList.remove('show');
+    },
+
+    showInventoryLogDetail(logId) {
+        const log = INVENTORY_LOGS.find(l => l._id === logId);
+        if (!log) return;
+        const ts = new Date(log.timestamp);
+        const isPositive = log.quantity_change > 0;
+        const changeColor = isPositive ? 'var(--green)' : 'var(--red)';
+        const content = `
+            <div class="receipt-line"><span>Log ID</span><span style="font-size:.75rem;">${log._id}</span></div>
+            <div class="receipt-line"><span>Timestamp</span><span>${ts.toLocaleString('en-PH')}</span></div>
+            <div class="receipt-line"><span>Action</span><span><span class="badge ${log.action === 'RESTOCK' ? 'badge-ok' : 'badge-low'}">${log.action}</span></span></div>
+            <div class="receipt-line"><span>Item</span><span>${log.item_name}</span></div>
+            <div class="receipt-line"><span>Qty Change</span><span style="color:${changeColor};font-weight:700;">${isPositive ? '+' : ''}${log.quantity_change}</span></div>
+            <div class="receipt-line"><span>Stock Before</span><span>${log.previous_stock}</span></div>
+            <div class="receipt-line"><span>Stock After</span><span>${log.new_stock}</span></div>
+            <div class="detail-section">
+                <div class="detail-title">Metadata</div>
+                <div class="detail-row"><span class="detail-label">Performed By</span><span class="detail-value">${log.performed_by}</span></div>
+                <div class="detail-row"><span class="detail-label">Reference</span><span class="detail-value">${log.reference || 'N/A'}</span></div>
+                <div class="detail-row"><span class="detail-label">Notes</span><span class="detail-value">${log.notes || 'N/A'}</span></div>
+            </div>
+            <div class="detail-section">
+                <div class="detail-title">Raw JSON</div>
+                <pre class="json-preview">${JSON.stringify(log, null, 2)}</pre>
+            </div>`;
+        this.showLogDetailModal('Inventory Movement Detail', content);
+    },
+
+    showReturnLogDetail(logId) {
+        const log = RETURN_LOGS.find(l => l._id === logId);
+        if (!log) return;
+        const ts = new Date(log.timestamp);
+        const dispositionColor = log.restocked ? 'var(--green)' : 'var(--red)';
+        const content = `
+            <div class="receipt-line"><span>Log ID</span><span style="font-size:.75rem;">${log._id}</span></div>
+            <div class="receipt-line"><span>Timestamp</span><span>${ts.toLocaleString('en-PH')}</span></div>
+            <div class="receipt-line"><span>Return #</span><span>${log.return_id}</span></div>
+            <div class="receipt-line"><span>Original Sale</span><span>#${log.original_sale_id}</span></div>
+            <div class="receipt-line"><span>Item</span><span>${log.item_name}</span></div>
+            <div class="receipt-line"><span>Qty Returned</span><span style="color:var(--red)">${log.quantity_returned}</span></div>
+            <div class="receipt-line"><span>Reason</span><span>${log.reason}</span></div>
+            <div class="receipt-line"><span>Disposition</span><span style="color:${dispositionColor};font-weight:600;">${log.disposition}</span></div>
+            <div class="receipt-total" style="border-top-color:var(--red);"><span>Refund Amount</span><span style="color:var(--red);">${peso(log.refund_amount)}</span></div>
+            <div class="detail-section">
+                <div class="detail-title">Approval Info</div>
+                <div class="detail-row"><span class="detail-label">Approved By</span><span class="detail-value">${log.approved_by}</span></div>
+                <div class="detail-row"><span class="detail-label">Customer</span><span class="detail-value">${log.customer_name}</span></div>
+                <div class="detail-row"><span class="detail-label">Notes</span><span class="detail-value">${log.notes || 'N/A'}</span></div>
+            </div>
+            <div class="detail-section">
+                <div class="detail-title">Raw JSON</div>
+                <pre class="json-preview">${JSON.stringify(log, null, 2)}</pre>
+            </div>`;
+        this.showLogDetailModal('Return Log Detail', content);
+    },
+
+    showSalesLogDetail(logId) {
+        const log = SALES_LOGS.find(l => l._id === logId);
+        if (!log) return;
+        const ts = new Date(log.timestamp);
+        let itemsHTML = log.items.map(i => `
+            <div class="log-item-row">
+                <span class="log-item-name">${i.item_name}</span>
+                <span class="log-item-qty">x${i.quantity}</span>
+                <span class="log-item-price">${peso(i.line_total)}</span>
+                <span class="log-item-profit" style="color:var(--green);">+${peso(i.profit)}</span>
+            </div>`).join('');
+        const content = `
+            <div class="receipt-line"><span>Log ID</span><span style="font-size:.75rem;">${log._id}</span></div>
+            <div class="receipt-line"><span>Sale #</span><span>${log.sale_id}</span></div>
+            <div class="receipt-line"><span>Timestamp</span><span>${ts.toLocaleString('en-PH')}</span></div>
+            <div class="receipt-line"><span>Payment</span><span>${log.payment_method}</span></div>
+            <div class="receipt-line"><span>Processed By</span><span>${log.processed_by}</span></div>
+            <div class="detail-section">
+                <div class="detail-title"><i class="fas fa-user" style="color:var(--accent);margin-right:4px;"></i> Customer</div>
+                <div class="detail-row"><span class="detail-label">Name</span><span class="detail-value">${log.customer.name}</span></div>
+                <div class="detail-row"><span class="detail-label">ID</span><span class="detail-value">${log.customer.customer_id || 'Walk-in'}</span></div>
+                <div class="detail-row"><span class="detail-label">Phone</span><span class="detail-value">${log.customer.phone}</span></div>
+                <div class="detail-row"><span class="detail-label">Email</span><span class="detail-value">${log.customer.email || 'N/A'}</span></div>
+                <div class="detail-row"><span class="detail-label">City</span><span class="detail-value">${log.customer.city || 'N/A'}</span></div>
+            </div>
+            <div class="detail-section">
+                <div class="detail-title"><i class="fas fa-box" style="color:var(--accent);margin-right:4px;"></i> Items (${log.items.length})</div>
+                <div class="log-items-list">${itemsHTML}</div>
+            </div>
+            <div class="receipt-total"><span>Total</span><span>${peso(log.total_amount)}</span></div>
+            <div class="receipt-line"><span>Total Profit</span><span style="color:var(--green);font-weight:700;">${peso(log.total_profit)}</span></div>
+            <div class="detail-section">
+                <div class="detail-title">Raw JSON</div>
+                <pre class="json-preview">${JSON.stringify(log, null, 2)}</pre>
+            </div>`;
+        this.showLogDetailModal('Sales Log Detail — Nested Data', content);
+    },
+
+    showActivityLogDetail(logId) {
+        const log = SYSTEM_ACTIVITY_FEED.find(l => l._id === logId);
+        if (!log) return;
+        const ts = new Date(log.created_at);
+        const content = `
+            <div class="receipt-line"><span>Log ID</span><span style="font-size:.75rem;">${log._id}</span></div>
+            <div class="receipt-line"><span>Timestamp</span><span>${ts.toLocaleString('en-PH')}</span></div>
+            <div class="receipt-line"><span>User ID</span><span>${log.user_id}</span></div>
+            <div class="receipt-line"><span>Username</span><span><strong>${log.username}</strong></span></div>
+            <div class="receipt-line"><span>Role</span><span class="badge badge-info">${log.role}</span></div>
+            <div class="receipt-line"><span>Action</span><span><strong style="color:var(--accent);">${log.action}</strong></span></div>
+            <div class="receipt-line"><span>Reference ID</span><span>${log.reference_id || 'N/A'}</span></div>
+            <div class="detail-section">
+                <div class="detail-title">Details</div>
+                <div class="detail-row"><span class="detail-label">Activity Description</span><span class="detail-value">${log.details || 'No additional details'}</span></div>
+            </div>
+            <div class="detail-section">
+                <div class="detail-title">Raw JSON</div>
+                <pre class="json-preview">${JSON.stringify(log, null, 2)}</pre>
+            </div>`;
+        this.showLogDetailModal('System Activity Log Detail', content);
+    }
+};
+
+// ===== Global Activity Log Handler =====
+function showActivityLogDetail(logId) {
+    LogRenderers.showActivityLogDetail(logId);
+}
+
 // ========== INITIALIZE ALL MODULES ON LOAD ==========
+
+// Helper function to populate staff dropdowns
+function populateStaffDropdowns() {
+    // POS Cashier Dropdown
+    const posCashierSelect = document.getElementById('posCashier');
+    if (posCashierSelect) {
+        posCashierSelect.innerHTML = '<option value="">-- Select Cashier --</option>';
+        STAFF_USERS.filter(s => s.role === 'Cashier' || s.role === 'Manager').forEach(staff => {
+            posCashierSelect.innerHTML += `<option value="${staff.username}">${staff.username} (${staff.role})</option>`;
+        });
+    }
+
+    // Inventory Product Staff Dropdown
+    const productStaffSelect = document.getElementById('productStaff');
+    if (productStaffSelect) {
+        productStaffSelect.innerHTML = '<option value="">-- Select Staff --</option>';
+        STAFF_USERS.filter(s => s.role === 'Administrator' || s.role === 'Manager').forEach(staff => {
+            productStaffSelect.innerHTML += `<option value="${staff.username}">${staff.username} (${staff.role})</option>`;
+        });
+    }
+
+    // Stock Adjustment Staff Dropdown
+    const stockStaffSelect = document.getElementById('stockStaff');
+    if (stockStaffSelect) {
+        stockStaffSelect.innerHTML = '<option value="">-- Select Staff --</option>';
+        STAFF_USERS.filter(s => s.role === 'Administrator' || s.role === 'Manager').forEach(staff => {
+            stockStaffSelect.innerHTML += `<option value="${staff.username}">${staff.username} (${staff.role})</option>`;
+        });
+    }
+
+    // Returns Approver Dropdown
+    const returnApproverSelect = document.getElementById('returnApprover');
+    if (returnApproverSelect) {
+        returnApproverSelect.innerHTML = '<option value="">-- Select Manager --</option>';
+        STAFF_USERS.filter(s => s.role === 'Manager' || s.role === 'Administrator').forEach(staff => {
+            returnApproverSelect.innerHTML += `<option value="${staff.username}">${staff.username} (${staff.role})</option>`;
+        });
+    }
+}
 
 // Globalize for environment compatibility (e.g. GitHub Pages)
 window.Inventory = Inventory;
@@ -1486,8 +2568,12 @@ window.POS = POS;
 window.Ledger = Ledger;
 window.Returns = Returns;
 window.Dashboard = Dashboard;
+window.LogInterceptors = LogInterceptors;
+window.LogRenderers = LogRenderers;
+window.showLogDetail = showLogDetail;
 
 document.addEventListener('DOMContentLoaded', () => {
+    populateStaffDropdowns();
     Dashboard.init();
     POS.init();
     Inventory.init();

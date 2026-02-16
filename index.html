@@ -126,6 +126,17 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- System Activity Feed (system_activity_logs — last 5) -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-satellite-dish"></i> System Activity Feed</h3>
+                        <span class="badge badge-ok" style="font-size:.68rem;">LIVE &middot; Last 5</span>
+                    </div>
+                    <div class="card-body" id="activityFeedBody">
+                        <div style="text-align:center;color:var(--text-muted);padding:24px;">Loading activity...</div>
+                    </div>
+                </div>
             </section>
 
             <!-- ============ POS VIEW ============ -->
@@ -187,6 +198,14 @@
                                 <div class="form-group">
                                     <label>Address</label>
                                     <input type="text" id="customerAddress" class="input-text" placeholder="Address (optional)">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Processed By <span class="required">*</span></label>
+                                    <select id="posCashier" class="input-select" required>
+                                        <option value="">-- Select Cashier --</option>
+                                    </select>
                                 </div>
                             </div>
                         </div>
@@ -258,6 +277,14 @@
                                     <input type="number" id="productPrice" class="input-text" min="0" step="0.01" placeholder="₱0.00" oninput="Inventory.calculateMargin()">
                                 </div>
                             </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Added By <span class="required">*</span></label>
+                                    <select id="productStaff" class="input-select" required>
+                                        <option value="">-- Select Staff --</option>
+                                    </select>
+                                </div>
+                            </div>
                             <div class="form-actions">
                                 <button class="btn btn-primary" onclick="Inventory.saveProduct()">
                                     <i class="fas fa-save"></i> <span id="productSaveBtn">Add Product</span>
@@ -293,6 +320,12 @@
                             <div class="form-group">
                                 <label>Quantity to Add</label>
                                 <input type="number" id="addStockQty" class="input-text" min="1" value="1">
+                            </div>
+                            <div class="form-group">
+                                <label>Added By <span class="required">*</span></label>
+                                <select id="stockStaff" class="input-select" required>
+                                    <option value="">-- Select Staff --</option>
+                                </select>
                             </div>
                             <button class="btn btn-primary" onclick="Inventory.addStock()">
                                 <i class="fas fa-plus"></i> Add Stock
@@ -337,9 +370,33 @@
                         </table>
                     </div>
                 </div>
-            </section>
 
-            <!-- ============ TRANSACTION LEDGER VIEW ============ -->
+                <!-- Inventory Movement Logs (inventory_logs) -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-arrow-right-arrow-left"></i> Inventory Movement Logs</h3>
+                        <span class="badge badge-ok" style="font-size:.68rem;">MongoDB &middot; inventory_logs</span>
+                    </div>
+                    <div class="card-body table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Action</th>
+                                    <th>Item</th>
+                                    <th>Qty Change</th>
+                                    <th>Before</th>
+                                    <th>After</th>
+                                    <th>Description</th>
+                                    <th>By</th>
+                                    <th>Info</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryLogsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
             <section class="view" id="view-ledger">
                 <h2 class="view-title"><i class="fas fa-book"></i> Transaction Ledger</h2>
                 <div class="acid-banner">
@@ -383,9 +440,33 @@
                         </table>
                     </div>
                 </div>
-            </section>
 
-            <!-- ============ RETURNS VIEW ============ -->
+                <!-- Sales Logs Table (sales_logs — MongoDB) -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-database"></i> Sales Logs</h3>
+                        <span class="badge badge-ok" style="font-size:.68rem;">MongoDB &middot; sales_logs</span>
+                    </div>
+                    <div class="card-body table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Sale #</th>
+                                    <th>Timestamp</th>
+                                    <th>Customer</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Profit</th>
+                                    <th>Description</th>
+                                    <th>By</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="salesLogsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
             <section class="view" id="view-returns">
                 <h2 class="view-title"><i class="fas fa-rotate-left"></i> Returns Management</h2>
                 <div class="card">
@@ -418,6 +499,12 @@
                                     <option value="Change of Mind">Change of Mind</option>
                                 </select>
                             </div>
+                            <div class="form-group">
+                                <label>Approved By <span class="required">*</span></label>
+                                <select id="returnApprover" class="input-select" disabled required>
+                                    <option value="">-- Select Manager --</option>
+                                </select>
+                            </div>
                             <button class="btn btn-primary" id="submitReturnBtn" onclick="Returns.submit()" disabled>
                                 <i class="fas fa-rotate-left"></i> Submit Return
                             </button>
@@ -444,6 +531,33 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- Return Logs (return_logs — MongoDB) -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-database"></i> Return Logs</h3>
+                        <span class="badge badge-ok" style="font-size:.68rem;">MongoDB &middot; return_logs</span>
+                    </div>
+                    <div class="card-body table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Return #</th>
+                                    <th>Sale #</th>
+                                    <th>Item</th>
+                                    <th>Qty</th>
+                                    <th>Reason</th>
+                                    <th>Disposition</th>
+                                    <th>Refund</th>
+                                    <th>Description</th>
+                                    <th>Approved By</th>
+                                    <th>Info</th>
+                                </tr>
+                            </thead>
+                            <tbody id="returnLogsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
             </section>
 
         </main>
@@ -466,6 +580,16 @@
             <h3>Transaction Details</h3>
             <div id="saleDetailsContent"></div>
             <button class="btn btn-primary" onclick="Ledger.closeDetailsModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Universal Log Detail Modal -->
+    <div class="modal-overlay" id="logDetailModal">
+        <div class="modal modal-large modal-log">
+            <div class="modal-icon" style="color: var(--accent)"><i class="fas fa-scroll"></i></div>
+            <h3 id="logDetailTitle">Log Detail</h3>
+            <div id="logDetailContent" class="log-detail-scroll"></div>
+            <button class="btn btn-primary" onclick="LogRenderers.closeLogDetailModal()">Close</button>
         </div>
     </div>
 
