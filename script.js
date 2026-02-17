@@ -153,19 +153,19 @@ let nextReturnId = 1;
 // ========== MONGODB LOG COLLECTIONS (Simulated) ==========
 
 // --- inventory_logs: tracks every stock movement ---
-const INVENTORY_LOGS = [];
+let INVENTORY_LOGS = [];
 
 // --- sales_logs: full sale records with nested customer & items ---
-const SALES_LOGS = [];
+let SALES_LOGS = [];
 
 // --- return_logs: return operations ---
-const RETURN_LOGS = [];
+let RETURN_LOGS = [];
 
 // ========== UNIFIED SYSTEM ACTIVITY FEED ==========
 // Consolidated log from ALL modules: POS, Inventory, Ledger, Returns
 // Schema: _id, user_id, username, role, action, reference_id, created_at
 
-const SYSTEM_ACTIVITY_FEED = [];
+let SYSTEM_ACTIVITY_FEED = [];
 
 // Deprecated: SYSTEM_ACTIVITY_LOGS (kept for backward compatibility during migration)
 const SYSTEM_ACTIVITY_LOGS = SYSTEM_ACTIVITY_FEED;
@@ -273,76 +273,86 @@ const Dashboard = {
     },
 
     buildLiveAnalytics() {
-        // Build DAILY_SALES_SUMMARY
-        DAILY_SALES_SUMMARY.length = 0;
-        const dailyMap = {};
-        SALES.forEach(sale => {
-            const date = sale.date;
-            if (!dailyMap[date]) {
-                dailyMap[date] = {
-                    date: date,
-                    total_sales: 0,
-                    total_profit: 0,
-                    transactions_count: 1,
-                    total_items_sold: 0,
-                    average_transaction_value: 0
-                };
-            } else {
-                dailyMap[date].transactions_count++;
-            }
+    // Build DAILY_SALES_SUMMARY from MongoDB SALES_LOGS
+    DAILY_SALES_SUMMARY.length = 0;
+    const dailyMap = {};
+    
+    SALES_LOGS.forEach(sale => {
+        // MongoDB timestamp to date
+        const saleDate = sale.timestamp ? new Date(sale.timestamp).toISOString().split('T')[0] : new Date().toISOString().split('T')[0];
+        
+        if (!dailyMap[saleDate]) {
+            dailyMap[saleDate] = {
+                date: saleDate,
+                total_sales: 0,
+                total_profit: 0,
+                transactions_count: 0,
+                total_items_sold: 0,
+                average_transaction_value: 0
+            };
+        }
+        
+        dailyMap[saleDate].transactions_count++;
+        dailyMap[saleDate].total_sales += sale.total_amount || 0;
+        dailyMap[saleDate].total_profit += sale.total_profit || 0;
+        
+        // MongoDB items are in sale.items array
+        if (sale.items && Array.isArray(sale.items)) {
+            dailyMap[saleDate].total_items_sold += sale.items.reduce((sum, item) => sum + (item.quantity || 0), 0);
+        }
+    });
+    
+    Object.values(dailyMap).forEach(day => {
+        day.average_transaction_value = day.transactions_count > 0 ? day.total_sales / day.transactions_count : 0;
+        DAILY_SALES_SUMMARY.push(day);
+    });
 
-            // Sum sale items for this date
-            SALE_ITEMS.filter(si => si.saleId === sale.id).forEach(si => {
-                const item = getItem(si.itemId);
-                const lineTotal = si.soldPrice * si.qty;
-                const profit = (si.soldPrice - (item ? item.cost : 0)) * si.qty;
-                dailyMap[date].total_sales += lineTotal;
-                dailyMap[date].total_profit += profit;
-                dailyMap[date].total_items_sold += si.qty;
+    // Build ITEM_PERFORMANCE_ANALYTICS from MongoDB SALES_LOGS
+    ITEM_PERFORMANCE_ANALYTICS.length = 0;
+    const itemMap = {};
+    
+    SALES_LOGS.forEach(sale => {
+        if (sale.items && Array.isArray(sale.items)) {
+            sale.items.forEach(item => {
+                const itemId = item.item_id;
+                const itemName = item.item_name || 'Unknown';
+                
+                // Try to get type from ITEMS array if available
+                const itemObj = getItem(itemId);
+                const typeObj = itemObj ? getType(itemObj.typeId) : null;
+                
+                if (!itemMap[itemId]) {
+                    itemMap[itemId] = {
+                        name: itemName,
+                        type: typeObj ? typeObj.name : 'Product',
+                        total_quantity_sold: 0,
+                        total_revenue: 0,
+                        total_profit: 0,
+                        return_rate: 0,
+                        damage_rate: 0
+                    };
+                }
+                
+                itemMap[itemId].total_quantity_sold += item.quantity || 0;
+                itemMap[itemId].total_revenue += item.line_total || 0;
+                itemMap[itemId].total_profit += item.profit || 0;
             });
-        });
-        Object.values(dailyMap).forEach(day => {
-            day.average_transaction_value = day.transactions_count > 0 ? day.total_sales / day.transactions_count : 0;
-            DAILY_SALES_SUMMARY.push(day);
-        });
+        }
+    });
+    
+    Object.values(itemMap).forEach(item => {
+        ITEM_PERFORMANCE_ANALYTICS.push(item);
+    });
 
-        // Build ITEM_PERFORMANCE_ANALYTICS
-        ITEM_PERFORMANCE_ANALYTICS.length = 0;
-        const itemMap = {};
-        SALE_ITEMS.forEach(si => {
-            const item = getItem(si.itemId);
-            if (!item) return;
-            const type = getType(item.typeId);
-            
-            if (!itemMap[si.itemId]) {
-                itemMap[si.itemId] = {
-                    name: item.name,
-                    type: type ? type.name : 'Unknown',
-                    total_quantity_sold: 0,
-                    total_revenue: 0,
-                    total_profit: 0,
-                    return_rate: 0,
-                    damage_rate: 0
-                };
-            }
-            
-            const lineTotal = si.soldPrice * si.qty;
-            const profit = (si.soldPrice - item.cost) * si.qty;
-            itemMap[si.itemId].total_quantity_sold += si.qty;
-            itemMap[si.itemId].total_revenue += lineTotal;
-            itemMap[si.itemId].total_profit += profit;
-        });
-        Object.values(itemMap).forEach(item => {
-            ITEM_PERFORMANCE_ANALYTICS.push(item);
-        });
-
-        // Build CUSTOMER_ANALYTICS
-        CUSTOMER_ANALYTICS.length = 0;
-        const customerMap = {};
-        SALES.forEach(sale => {
-            const customerKey = sale.customerData ? sale.customerData.phone : sale.customerId;
-            const customerName = sale.customerData ? sale.customerData.name : 'Unknown';
-            const customerCity = sale.customerData ? sale.customerData.city : '';
+    // Build CUSTOMER_ANALYTICS from MongoDB SALES_LOGS
+    CUSTOMER_ANALYTICS.length = 0;
+    const customerMap = {};
+    
+    SALES_LOGS.forEach(sale => {
+        if (sale.customer) {
+            const customerKey = sale.customer.phone || sale.customer.name || 'unknown';
+            const customerName = sale.customer.name || 'Unknown';
+            const customerCity = sale.customer.city || '';
             
             if (!customerMap[customerKey]) {
                 customerMap[customerKey] = {
@@ -351,81 +361,109 @@ const Dashboard = {
                     total_orders: 0,
                     total_spent: 0,
                     total_profit_generated: 0,
-                    last_purchase_date: sale.date,
+                    last_purchase_date: sale.timestamp || new Date().toISOString(),
                     favorite_item_type: 'Unknown'
                 };
             }
             
             customerMap[customerKey].total_orders++;
-            customerMap[customerKey].last_purchase_date = sale.date;
+            customerMap[customerKey].total_spent += sale.total_amount || 0;
+            customerMap[customerKey].total_profit_generated += sale.total_profit || 0;
             
-            // Sum sale items for this customer
-            SALE_ITEMS.filter(si => si.saleId === sale.id).forEach(si => {
-                const item = getItem(si.itemId);
-                const type = getType(item ? item.typeId : null);
-                const lineTotal = si.soldPrice * si.qty;
-                const profit = (si.soldPrice - (item ? item.cost : 0)) * si.qty;
-                customerMap[customerKey].total_spent += lineTotal;
-                customerMap[customerKey].total_profit_generated += profit;
-                if (type) customerMap[customerKey].favorite_item_type = type.name;
-            });
-        });
-        Object.values(customerMap).forEach(customer => {
-            CUSTOMER_ANALYTICS.push(customer);
-        });
-
-        // Build FINANCIAL_SNAPSHOTS
-        FINANCIAL_SNAPSHOTS.length = 0;
-        if (SALES.length > 0) {
-            let totalRevenue = 0, totalCost = 0, totalReturns = 0, totalDamage = 0;
+            // Update last purchase if newer
+            const saleDate = new Date(sale.timestamp);
+            const lastDate = new Date(customerMap[customerKey].last_purchase_date);
+            if (saleDate > lastDate) {
+                customerMap[customerKey].last_purchase_date = sale.timestamp;
+            }
             
-            SALE_ITEMS.forEach(si => {
-                const item = getItem(si.itemId);
-                const lineTotal = si.soldPrice * si.qty;
-                const cost = (item ? item.cost : 0) * si.qty;
-                totalRevenue += lineTotal;
-                totalCost += cost;
-            });
-
-            // TODO: Add returns and damage calculation from RETURNS array if needed
-            
-            const netSales = totalRevenue - totalReturns;
-            const netProfit = netSales - totalCost - totalDamage;
-            
-            // Get top city and item
-            const topCity = CITY_SALES_ANALYTICS.length > 0 ? CITY_SALES_ANALYTICS[0].city : 'N/A';
-            const topItem = ITEM_PERFORMANCE_ANALYTICS.length > 0 ? ITEM_PERFORMANCE_ANALYTICS[0].name : 'N/A';
-            const lowStockCount = ITEMS.filter(i => i.qty <= LOW_STOCK_THRESHOLD).length;
-            
-            FINANCIAL_SNAPSHOTS.push({
-                snapshot_date: new Date().toISOString(),
-                gross_sales: totalRevenue,
-                total_returns: totalReturns,
-                damaged_stock_loss: totalDamage,
-                net_sales: netSales,
-                net_profit: netProfit,
-                top_city: topCity,
-                top_item: topItem,
-                low_stock_count: lowStockCount
-            });
+            // Get favorite item type from items
+            if (sale.items && sale.items.length > 0) {
+                const firstItem = getItem(sale.items[0].item_id);
+                if (firstItem) {
+                    const type = getType(firstItem.typeId);
+                    if (type) customerMap[customerKey].favorite_item_type = type.name;
+                }
+            }
         }
-    },
+    });
+    
+    Object.values(customerMap).forEach(customer => {
+        CUSTOMER_ANALYTICS.push(customer);
+    });
+
+    // Build FINANCIAL_SNAPSHOTS from MongoDB SALES_LOGS
+    FINANCIAL_SNAPSHOTS.length = 0;
+    if (SALES_LOGS.length > 0) {
+        let totalRevenue = 0, totalCost = 0, totalReturns = 0, totalDamage = 0;
+        
+        SALES_LOGS.forEach(sale => {
+            totalRevenue += sale.total_amount || 0;
+            // Calculate cost from items
+            if (sale.items && Array.isArray(sale.items)) {
+                sale.items.forEach(item => {
+                    totalCost += (item.cost || 0) * (item.quantity || 0);
+                });
+            }
+        });
+
+        // Add returns calculation
+        RETURN_LOGS.forEach(ret => {
+            totalReturns += ret.refund_amount || 0;
+        });
+        
+        const netSales = totalRevenue - totalReturns;
+        const netProfit = netSales - totalCost - totalDamage;
+        
+        // Get top city (build it if not already done)
+        if (CITY_SALES_ANALYTICS.length === 0) {
+            // Quick build for snapshot
+            const cityQuickMap = {};
+            SALES_LOGS.forEach(sale => {
+                if (sale.customer && sale.customer.city) {
+                    const city = sale.customer.city;
+                    if (!cityQuickMap[city]) cityQuickMap[city] = 0;
+                    cityQuickMap[city] += sale.total_amount || 0;
+                }
+            });
+            const sortedCities = Object.entries(cityQuickMap).sort((a, b) => b[1] - a[1]);
+            var topCity = sortedCities.length > 0 ? sortedCities[0][0] : 'N/A';
+        } else {
+            var topCity = CITY_SALES_ANALYTICS[0] ? CITY_SALES_ANALYTICS[0].city : 'N/A';
+        }
+        
+        // Get top item
+        const topItem = ITEM_PERFORMANCE_ANALYTICS.length > 0 && ITEM_PERFORMANCE_ANALYTICS[0] ? ITEM_PERFORMANCE_ANALYTICS[0].name : 'N/A';
+        const lowStockCount = ITEMS.filter(i => i.qty <= LOW_STOCK_THRESHOLD).length;
+        
+        FINANCIAL_SNAPSHOTS.push({
+            snapshot_date: new Date().toISOString(),
+            gross_sales: totalRevenue,
+            total_returns: totalReturns,
+            damaged_stock_loss: totalDamage,
+            net_sales: netSales,
+            net_profit: netProfit,
+            top_city: topCity,
+            top_item: topItem,
+            low_stock_count: lowStockCount
+        });
+    }
+},
+
 
     renderKPIs() {
-        let revenue = 0, cost = 0;
-        SALE_ITEMS.forEach(si => {
-            const item = getItem(si.itemId);
-            revenue += si.soldPrice * si.qty;
-            cost += (item ? item.cost : 0) * si.qty;
-        });
-        const profit = revenue - cost;
-        const alerts = ITEMS.filter(i => i.qty <= LOW_STOCK_THRESHOLD).length;
+    let totalRevenue = 0, totalProfit = 0;
+    SALES_LOGS.forEach(sale => {
+        totalRevenue += sale.total_amount || 0;
+        totalProfit += sale.total_profit || 0;
+    });
+    const alerts = ITEMS.filter(i => i.qty <= LOW_STOCK_THRESHOLD).length;
 
-        document.getElementById('kpiRevenue').textContent = peso(revenue);
-        document.getElementById('kpiProfit').textContent = peso(profit);
-        document.getElementById('kpiTransactions').textContent = SALES.length;
-        document.getElementById('kpiAlerts').textContent = alerts;
-    },
+    document.getElementById('kpiRevenue').textContent = peso(totalRevenue);
+    document.getElementById('kpiProfit').textContent = peso(totalProfit);
+    document.getElementById('kpiTransactions').textContent = SALES_LOGS.length;
+    document.getElementById('kpiAlerts').textContent = alerts;
+},
 
     renderAlerts() {
         const lowItems = ITEMS.filter(i => i.qty <= LOW_STOCK_THRESHOLD);
@@ -456,34 +494,35 @@ const Dashboard = {
     },
 
     renderProfit() {
-        const filter = document.getElementById('profitFilter').value;
-        const today = new Date().toISOString().slice(0, 10);
-        const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+    const filter = document.getElementById('profitFilter').value;
+    const today = new Date().toISOString().slice(0, 10);
+    const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
 
-        let filteredSaleIds = new Set();
-        SALES.forEach(s => {
-            if (filter === 'all') filteredSaleIds.add(s.id);
-            else if (filter === 'today' && s.date === today) filteredSaleIds.add(s.id);
-            else if (filter === 'week' && s.date >= weekAgo && s.date <= today) filteredSaleIds.add(s.id);
+    let filteredSales = SALES_LOGS;
+    if (filter === 'today') {
+        filteredSales = SALES_LOGS.filter(s => s.timestamp.slice(0,10) === today);
+    } else if (filter === 'week') {
+        filteredSales = SALES_LOGS.filter(s => {
+            const date = s.timestamp.slice(0,10);
+            return date >= weekAgo && date <= today;
         });
+    }
 
-        let revenue = 0, cost = 0, txns = filteredSaleIds.size;
-        SALE_ITEMS.forEach(si => {
-            if (!filteredSaleIds.has(si.saleId)) return;
-            const item = getItem(si.itemId);
-            revenue += si.soldPrice * si.qty;
-            cost += (item ? item.cost : 0) * si.qty;
-        });
-        const profit = revenue - cost;
-        const margin = revenue > 0 ? ((profit / revenue) * 100).toFixed(1) : '0.0';
+    let revenue = 0, profit = 0;
+    filteredSales.forEach(sale => {
+        revenue += sale.total_amount || 0;
+        profit += sale.total_profit || 0;
+    });
+    const cost = revenue - profit;
+    const margin = revenue > 0 ? ((profit / revenue) * 100).toFixed(1) : '0.0';
 
-        document.getElementById('profitSummary').innerHTML = `
-            <div class="profit-stat revenue"><span class="stat-label">Revenue</span><span class="stat-value">${peso(revenue)}</span></div>
-            <div class="profit-stat cost"><span class="stat-label">Total Cost</span><span class="stat-value">${peso(cost)}</span></div>
-            <div class="profit-stat profit"><span class="stat-label">Net Profit</span><span class="stat-value">${peso(profit)}</span></div>
-            <div class="profit-stat margin"><span class="stat-label">Margin</span><span class="stat-value">${margin}%</span></div>
-        `;
-    },
+    document.getElementById('profitSummary').innerHTML = `
+        <div class="profit-stat revenue"><span class="stat-label">Revenue</span><span class="stat-value">${peso(revenue)}</span></div>
+        <div class="profit-stat cost"><span class="stat-label">Total Cost</span><span class="stat-value">${peso(cost)}</span></div>
+        <div class="profit-stat profit"><span class="stat-label">Net Profit</span><span class="stat-value">${peso(profit)}</span></div>
+        <div class="profit-stat margin"><span class="stat-label">Margin</span><span class="stat-value">${margin}%</span></div>
+    `;
+},
 
     renderTopProducts() {
         const productMap = {};
@@ -678,51 +717,38 @@ const Dashboard = {
     },
 
     renderTopProductsChart() {
-        const productMap = {};
-        SALE_ITEMS.forEach(si => {
-            if (!productMap[si.itemId]) productMap[si.itemId] = { units: 0, revenue: 0, profit: 0 };
-            const item = getItem(si.itemId);
-            productMap[si.itemId].units += si.qty;
-            productMap[si.itemId].revenue += si.soldPrice * si.qty;
-            productMap[si.itemId].profit += (si.soldPrice - (item ? item.cost : 0)) * si.qty;
-        });
+    const sorted = [...ITEM_PERFORMANCE_ANALYTICS].sort((a, b) => b.total_revenue - a.total_revenue).slice(0, 8);
 
-        const sorted = Object.entries(productMap)
-            .map(([id, data]) => ({ item: getItem(Number(id)), ...data }))
-            .filter(x => x.item)
-            .sort((a, b) => b.revenue - a.revenue)
-            .slice(0, 8);
+    if (sorted.length === 0) {
+        document.getElementById('topProductsChart').innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:24px;">No product sales data available</div>';
+        return;
+    }
 
-        if (sorted.length === 0) {
-            document.getElementById('topProductsChart').innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:24px;">No product sales data available</div>';
-            return;
-        }
+    const maxRevenue = Math.max(...sorted.map(p => p.total_revenue));
 
-        const maxRevenue = Math.max(...sorted.map(p => p.revenue));
-        
-        document.getElementById('topProductsChart').innerHTML = sorted.map((p, index) => {
-            const revenuePercent = (p.revenue / maxRevenue) * 100;
-            const profitPercent = p.revenue > 0 ? ((p.profit / p.revenue) * 100).toFixed(1) : '0';
-            
-            return `
-                <div class="chart-row">
-                    <div class="chart-row-label">
-                        <span class="chart-rank">#${index + 1}</span>
-                        <strong>${p.item.name}</strong>
-                        <small style="color:var(--text-muted);">${p.units} units</small>
-                    </div>
-                    <div class="chart-row-bar">
-                        <div class="chart-bar-fill" style="width:${revenuePercent}%;background:linear-gradient(90deg,var(--accent),var(--green));"></div>
-                        <span class="chart-bar-value">${peso(p.revenue)}</span>
-                    </div>
-                    <div class="chart-row-stat">
-                        <small>Profit:</small> <strong style="color:var(--blue);">${peso(p.profit)}</strong>
-                        <small>(${profitPercent}%)</small>
-                    </div>
+    document.getElementById('topProductsChart').innerHTML = sorted.map((p, index) => {
+        const revenuePercent = (p.total_revenue / maxRevenue) * 100;
+        const profitPercent = p.total_revenue > 0 ? ((p.total_profit / p.total_revenue) * 100).toFixed(1) : '0';
+
+        return `
+            <div class="chart-row">
+                <div class="chart-row-label">
+                    <span class="chart-rank">#${index + 1}</span>
+                    <strong>${p.name}</strong>
+                    <small style="color:var(--text-muted);">${p.total_quantity_sold} units</small>
                 </div>
-            `;
-        }).join('');
-    },
+                <div class="chart-row-bar">
+                    <div class="chart-bar-fill" style="width:${revenuePercent}%;background:linear-gradient(90deg,var(--accent),var(--green));"></div>
+                    <span class="chart-bar-value">${peso(p.total_revenue)}</span>
+                </div>
+                <div class="chart-row-stat">
+                    <small>Profit:</small> <strong style="color:var(--blue);">${peso(p.total_profit)}</strong>
+                    <small>(${profitPercent}%)</small>
+                </div>
+            </div>
+        `;
+    }).join('');
+},
 
     renderCityPerformanceCards() {
         // Ensure live city data is up to date
@@ -766,67 +792,56 @@ const Dashboard = {
 
     // Build city analytics from live sales data (customer.city)
     buildLiveCityAnalytics() {
-        // Clear existing data
-        CITY_SALES_ANALYTICS.length = 0;
-        
-        // Build city map from actual sales
-        const cityMap = {};
-        SALES.forEach(sale => {
-            const city = sale.customerData ? sale.customerData.city : '';
-            if (!city) return;
-            
-            if (!cityMap[city]) {
-                cityMap[city] = {
-                    city: city,
-                    total_customers: new Set(),
-                    total_sales_amount: 0,
-                    total_transactions: 0,
-                    total_items_sold: 0,
-                    total_profit: 0,
-                    itemCounts: {}
-                };
-            }
-            
-            const customerKey = sale.customerData ? sale.customerData.phone : sale.customerId;
-            cityMap[city].total_customers.add(customerKey);
-            cityMap[city].total_transactions++;
-            
-            // Sum up sale items for this sale
-            SALE_ITEMS.filter(si => si.saleId === sale.id).forEach(si => {
-                const item = getItem(si.itemId);
-                const lineTotal = si.soldPrice * si.qty;
-                const profit = (si.soldPrice - (item ? item.cost : 0)) * si.qty;
-                cityMap[city].total_sales_amount += lineTotal;
-                cityMap[city].total_items_sold += si.qty;
-                cityMap[city].total_profit += profit;
-                
-                // Track top product
-                const itemName = item ? item.name : 'Unknown';
-                if (!cityMap[city].itemCounts[itemName]) cityMap[city].itemCounts[itemName] = 0;
-                cityMap[city].itemCounts[itemName] += si.qty;
-            });
+    CITY_SALES_ANALYTICS.length = 0;
+    const cityMap = {};
+
+    SALES_LOGS.forEach(sale => {
+        const city = sale.customer?.city;
+        if (!city) return;
+
+        if (!cityMap[city]) {
+            cityMap[city] = {
+                city,
+                total_customers: new Set(),
+                total_sales_amount: 0,
+                total_transactions: 0,
+                total_items_sold: 0,
+                total_profit: 0,
+                itemCounts: {}
+            };
+        }
+
+        const custKey = sale.customer?.phone || sale.customer?.name || 'unknown';
+        cityMap[city].total_customers.add(custKey);
+        cityMap[city].total_transactions++;
+
+        sale.items.forEach(item => {
+            cityMap[city].total_sales_amount += item.line_total || 0;
+            cityMap[city].total_items_sold += item.quantity || 0;
+            cityMap[city].total_profit += item.profit || 0;
+
+            const itemName = item.item_name || 'Unknown';
+            cityMap[city].itemCounts[itemName] = (cityMap[city].itemCounts[itemName] || 0) + (item.quantity || 0);
         });
-        
-        // Convert map to array
-        Object.values(cityMap).forEach(c => {
-            // Find most purchased item
-            let topItem = null;
-            let topQty = 0;
-            Object.entries(c.itemCounts).forEach(([name, qty]) => {
-                if (qty > topQty) { topItem = name; topQty = qty; }
-            });
-            
-            CITY_SALES_ANALYTICS.push({
-                city: c.city,
-                total_customers: c.total_customers.size,
-                total_sales_amount: c.total_sales_amount,
-                total_transactions: c.total_transactions,
-                total_items_sold: c.total_items_sold,
-                total_profit: c.total_profit,
-                most_purchased_item: topItem ? { name: topItem, quantity: topQty } : null
-            });
+    });
+
+    Object.values(cityMap).forEach(c => {
+        let topItem = null, topQty = 0;
+        Object.entries(c.itemCounts).forEach(([name, qty]) => {
+            if (qty > topQty) { topItem = name; topQty = qty; }
         });
-    },
+
+        CITY_SALES_ANALYTICS.push({
+            city: c.city,
+            total_customers: c.total_customers.size,
+            total_sales_amount: c.total_sales_amount,
+            total_transactions: c.total_transactions,
+            total_items_sold: c.total_items_sold,
+            total_profit: c.total_profit,
+            most_purchased_item: topItem ? { name: topItem, quantity: topQty } : null
+        });
+    });
+},
 
     renderTopCustomersChart() {
         const sorted = [...CUSTOMER_ANALYTICS].sort((a, b) => b.total_spent - a.total_spent).slice(0, 10);
@@ -1117,7 +1132,17 @@ const POS = {
         }
 
         // Create sale
-        const saleId = SALES.length + 1;
+        // Get next sale ID from MongoDB (highest existing + 1)
+let saleId = SALES.length + 1;
+try {
+    const existingSales = await API.getAllSales(1, 1);
+    if (existingSales.success && existingSales.data.length > 0) {
+        const maxId = Math.max(...existingSales.data.map(s => s.sale_id || 0));
+        saleId = maxId + 1;
+    }
+} catch (error) {
+    console.warn('Using local sale ID counter');
+}
         const saleDate = new Date().toISOString().slice(0, 10);
         SALES.push({ id: saleId, date: saleDate, customerId: 0, customerData: { name: customerName, phone: customerPhone, email: customerEmail, city: customerCity } });
 

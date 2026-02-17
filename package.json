@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node server.js",
     "dev": "nodemon server.js",
-    "init-db": "node scripts/init-mongodb.js",
+    "init-db": "node init-mongodb.js",
     "test": "node scripts/test-connection.js"
   },
   "keywords": ["pos", "inventory", "mongodb", "mysql", "analytics"],

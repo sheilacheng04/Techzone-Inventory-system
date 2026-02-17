@@ -318,6 +318,27 @@ app.get('/api/sales/range', async (req, res) => {
 
 // === INVENTORY ENDPOINTS ===
 
+// GET all inventory logs
+app.get('/api/inventory-logs', async (req, res) => {
+    try {
+        const InventoryLog = mongoose.model('inventory_logs');
+        const logs = await InventoryLog.find()
+            .sort({ timestamp: -1 })
+            .limit(500);
+        
+        res.json({
+            success: true,
+            data: logs,
+            count: logs.length
+        });
+    } catch (error) {
+        console.error('❌ Error fetching inventory logs:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
 // Log inventory action
 app.post('/api/inventory-logs', async (req, res) => {
     try {
