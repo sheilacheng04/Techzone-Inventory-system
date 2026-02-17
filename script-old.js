@@ -1066,7 +1066,7 @@ const POS = {
         btn.disabled = false;
     },
 
-    async processSale() {
+    processSale() {
         if (this.cart.length === 0) {
             showToast('Please add items to cart', 'warning');
             return;
@@ -1177,7 +1177,7 @@ const POS = {
         // IMPORTANT: Do this BEFORE clearing cart and BEFORE dashboard.init()
 
         // Sales Log (with nested customer + items)
-        await LogInterceptors.createSalesLog({
+        LogInterceptors.createSalesLog({
             sale_id: saleId,
             customer: {
                 customer_id: 0,
@@ -1194,10 +1194,10 @@ const POS = {
         });
 
         // Inventory Logs (one per cart line — stock decrease)
-        for (const logItem of logItems) {
+        logItems.forEach(logItem => {
             const item = getItem(logItem.item_id);
             if (item) {
-                await LogInterceptors.createInventoryLog({
+                LogInterceptors.createInventoryLog({
                     action: 'SALE',
                     item_id: logItem.item_id,
                     item_name: logItem.item_name,
@@ -1209,11 +1209,11 @@ const POS = {
                     notes: 'Sold to ' + customerName
                 });
             }
-        }
+        });
 
         // === UNIFIED ACTIVITY FEED LOG ===
         // Log 1: Sales Processed event
-        await LogInterceptors.createActivityLog({
+        LogInterceptors.createActivityLog({
             user_id: staffInfo.user_id,
             username: staffInfo.username,
             role: staffInfo.role,
@@ -1227,7 +1227,7 @@ const POS = {
             const item = getItem(i.item_id);
             return `${i.item_name}: -${i.quantity} (now ${item ? item.qty : '?'})`;
         }).join(', ');
-        await LogInterceptors.createActivityLog({
+        LogInterceptors.createActivityLog({
             user_id: staffInfo.user_id,
             username: staffInfo.username,
             role: staffInfo.role,
@@ -1325,7 +1325,7 @@ const Inventory = {
         }
     },
 
-    async saveProduct() {
+    saveProduct() {
         const editId = document.getElementById('editProductId').value;
         const name = document.getElementById('productName').value.trim();
         const typeId = Number(document.getElementById('productType').value);
@@ -1379,7 +1379,7 @@ const Inventory = {
                 // === LOG INTERCEPTOR: inventory_log if stock changed ===
                 if (qtyChanged) {
                     const qtyChange = qty - oldQty;
-                    await LogInterceptors.createInventoryLog({
+                    LogInterceptors.createInventoryLog({
                         action: 'PRODUCT_UPDATED',
                         item_id: Number(editId),
                         item_name: name,
@@ -1394,7 +1394,7 @@ const Inventory = {
 
                 // === UNIFIED ACTIVITY FEED LOG ===
                 const staffInfo = getStaffInfo(staffUsername);
-                await LogInterceptors.createActivityLog({
+                LogInterceptors.createActivityLog({
                     user_id: staffInfo.user_id,
                     username: staffInfo.username,
                     role: staffInfo.role,
@@ -1418,7 +1418,7 @@ const Inventory = {
             showToast(`Product "${name}" added successfully`, 'success');
 
             // === LOG INTERCEPTOR: inventory_log for initial stock ===
-            await LogInterceptors.createInventoryLog({
+            LogInterceptors.createInventoryLog({
                 action: 'PRODUCT_ADDED',
                 item_id: newId,
                 item_name: name,
@@ -1432,7 +1432,7 @@ const Inventory = {
 
             // === UNIFIED ACTIVITY FEED LOG ===
             const staffInfo = getStaffInfo(staffUsername);
-            await LogInterceptors.createActivityLog({
+            LogInterceptors.createActivityLog({
                 user_id: staffInfo.user_id,
                 username: staffInfo.username,
                 role: staffInfo.role,
@@ -1535,7 +1535,7 @@ const Inventory = {
         }
     },
 
-    async addStock() {
+    addStock() {
         const productId = Number(document.getElementById('addStockProductId').value);
         const qtyToAdd = Number(document.getElementById('addStockQty').value);
         const staffUsername = document.getElementById('stockStaff').value.trim();
@@ -1565,7 +1565,7 @@ const Inventory = {
         item.qty += qtyToAdd;
 
         // === LOG INTERCEPTOR: inventory_log for restock ===
-        await LogInterceptors.createInventoryLog({
+        LogInterceptors.createInventoryLog({
             action: 'RESTOCK',
             item_id: productId,
             item_name: item.name,
@@ -1579,7 +1579,7 @@ const Inventory = {
 
         // === UNIFIED ACTIVITY FEED LOG ===
         const staffInfo = getStaffInfo(staffUsername);
-        await LogInterceptors.createActivityLog({
+        LogInterceptors.createActivityLog({
             user_id: staffInfo.user_id,
             username: staffInfo.username,
             role: staffInfo.role,
@@ -2123,7 +2123,7 @@ const Returns = {
         submitBtn.disabled = false;
     },
 
-    async submit() {
+    submit() {
         const saleId = Number(document.getElementById('returnSaleId').value);
         const saleItemId = Number(document.getElementById('returnItem').value);
         const qty = Number(document.getElementById('returnQty').value);
@@ -2201,7 +2201,7 @@ const Returns = {
         // === LOG INTERCEPTOR: Auto-generate return_log + system_activity_log ===
         const customerNameForLog = sale?.customerData?.name || (sale?.customerId ? (getCustomer(sale.customerId)?.name || 'Walk-in') : 'Walk-in');
 
-        await LogInterceptors.createReturnLog({
+        LogInterceptors.createReturnLog({
             return_id: returnRecord.id,
             original_sale_id: saleId,
             item_id: saleItem.itemId,
@@ -2218,7 +2218,7 @@ const Returns = {
 
         // Inventory log if restocked
         if (restocked && item) {
-            await LogInterceptors.createInventoryLog({
+            LogInterceptors.createInventoryLog({
                 action: 'RETURN',
                 item_id: saleItem.itemId,
                 item_name: item.name,
@@ -2233,7 +2233,7 @@ const Returns = {
 
         // === UNIFIED ACTIVITY FEED LOG ===
         const staffInfo = getStaffInfo(approverUsername);
-        await LogInterceptors.createActivityLog({
+        LogInterceptors.createActivityLog({
             user_id: staffInfo.user_id,
             username: staffInfo.username,
             role: staffInfo.role,
@@ -2305,8 +2305,9 @@ const LogInterceptors = {
     },
 
     // --- Inventory Log Creator ---
-    async createInventoryLog({ action, item_id, item_name, quantity_change, previous_stock, new_stock, performed_by, reference, notes }) {
+    createInventoryLog({ action, item_id, item_name, quantity_change, previous_stock, new_stock, performed_by, reference, notes }) {
         const log = {
+            _id: this.objectId('invlog'),
             timestamp: this.cleanDate(new Date()),
             action: this.cleanString(action),
             item_id: this.cleanInt(item_id),
@@ -2319,22 +2320,11 @@ const LogInterceptors = {
             notes: this.cleanString(notes)
         };
         INVENTORY_LOGS.unshift(log);
-        
-        // ⭐ Save to MongoDB via API
-        try {
-            if (typeof API !== 'undefined') {
-                await API.logInventoryAction(log);
-                console.log('✅ Inventory log saved to MongoDB');
-            }
-        } catch (error) {
-            console.error('❌ Failed to save inventory log to MongoDB:', error);
-        }
-        
         return log;
     },
 
     // --- Sales Log Creator (nested customer + items array) ---
-    async createSalesLog({ sale_id, customer, items, total_amount, total_profit, payment_method, processed_by }) {
+    createSalesLog({ sale_id, customer, items, total_amount, total_profit, payment_method, processed_by }) {
         const cleanItems = (items || []).map(i => ({
             item_id: this.cleanInt(i.item_id),
             item_name: this.cleanString(i.item_name),
@@ -2345,6 +2335,7 @@ const LogInterceptors = {
             profit: this.cleanNumber(i.profit)
         }));
         const log = {
+            _id: this.objectId('salelog'),
             timestamp: this.cleanDate(new Date()),
             sale_id: this.cleanInt(sale_id),
             transaction_type: 'SALE',
@@ -2362,23 +2353,13 @@ const LogInterceptors = {
             processed_by: this.cleanString(processed_by || 'cashier_01')
         };
         SALES_LOGS.unshift(log);
-        
-        // ⭐ Save to MongoDB via API
-        try {
-            if (typeof API !== 'undefined') {
-                await API.createSale(log);
-                console.log('✅ Sale saved to MongoDB:', sale_id);
-            }
-        } catch (error) {
-            console.error('❌ Failed to save sale to MongoDB:', error);
-        }
-        
         return log;
     },
 
     // --- Return Log Creator ---
-    async createReturnLog({ return_id, original_sale_id, item_id, item_name, quantity_returned, reason, disposition, refund_amount, restocked, approved_by, customer_name, notes }) {
+    createReturnLog({ return_id, original_sale_id, item_id, item_name, quantity_returned, reason, disposition, refund_amount, restocked, approved_by, customer_name, notes }) {
         const log = {
+            _id: this.objectId('retlog'),
             timestamp: this.cleanDate(new Date()),
             return_id: this.cleanInt(return_id),
             original_sale_id: this.cleanInt(original_sale_id),
@@ -2394,17 +2375,6 @@ const LogInterceptors = {
             notes: this.cleanString(notes)
         };
         RETURN_LOGS.unshift(log);
-        
-        // ⭐ Save to MongoDB via API
-        try {
-            if (typeof API !== 'undefined') {
-                await API.createReturn(log);
-                console.log('✅ Return saved to MongoDB');
-            }
-        } catch (error) {
-            console.error('❌ Failed to save return to MongoDB:', error);
-        }
-        
         return log;
     },
 
@@ -2425,8 +2395,9 @@ const LogInterceptors = {
 
     // --- Unified Activity Feed Creator ---
     // Logs to the consolidated SYSTEM_ACTIVITY_FEED used by all modules
-    async createActivityLog({ user_id = 1, username = 'staff', role = 'Staff', action = 'ACTION', reference_id = 0, details = '' }) {
+    createActivityLog({ user_id = 1, username = 'staff', role = 'Staff', action = 'ACTION', reference_id = 0, details = '' }) {
         const activity = {
+            _id: this.objectId('activity'),
             user_id: this.cleanInt(user_id),
             username: this.cleanString(username),
             role: this.cleanString(role),
@@ -2436,17 +2407,6 @@ const LogInterceptors = {
             details: this.cleanString(details)
         };
         SYSTEM_ACTIVITY_FEED.unshift(activity);
-        
-        // ⭐ Save to MongoDB via API
-        try {
-            if (typeof API !== 'undefined') {
-                await API.logActivity(activity);
-                console.log('✅ Activity logged to MongoDB');
-            }
-        } catch (error) {
-            console.error('❌ Failed to log activity to MongoDB:', error);
-        }
-        
         return activity;
     }
 };
