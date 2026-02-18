@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechZone &mdash; Staff Portal</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+</head>
+<body>
+
+    <!-- ===== TOP NAVIGATION ===== -->
+    <nav class="topbar">
+        <div class="topbar-left">
+            <div class="logo"><i class="fas fa-microchip"></i> TechZone</div>
+            <span class="tagline">Staff Portal</span>
+        </div>
+        <div class="topbar-right">
+            <span class="db-badge">
+                <i class="fas fa-database"></i> MySQL &middot; MongoDB
+            </span>
+            <span class="clock" id="liveClock"></span>
+        </div>
+    </nav>
+
+    <!-- ===== SIDEBAR + MAIN LAYOUT ===== -->
+    <div class="app-shell">
+
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <ul class="nav-menu">
+                <li class="nav-item active" data-view="dashboard">
+                    <i class="fas fa-chart-line"></i><span>Dashboard</span>
+                </li>
+                <li class="nav-item" data-view="pos">
+                    <i class="fas fa-cash-register"></i><span>Point of Sale</span>
+                </li>
+                <li class="nav-item" data-view="inventory">
+                    <i class="fas fa-boxes-stacked"></i><span>Inventory</span>
+                </li>
+                <li class="nav-item" data-view="ledger">
+                    <i class="fas fa-book"></i><span>Transaction Ledger</span>
+                </li>
+                <li class="nav-item" data-view="returns">
+                    <i class="fas fa-rotate-left"></i><span>Returns</span>
+                </li>
+                <li class="nav-item" data-view="activity-log">
+                    <i class="fas fa-satellite-dish"></i><span>Activity Log</span>
+                </li>
+                <li class="nav-item" data-view="data-management">
+                    <i class="fas fa-database"></i><span>Data Management</span>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <small>&copy; 2026 TechZone</small>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="content">
+
+            <!-- ============ DASHBOARD VIEW ============ -->
+            <section class="view active" id="view-dashboard">
+                <h2 class="view-title"><i class="fas fa-chart-line"></i> Dashboard</h2>
+
+                <!-- KPI Cards -->
+                <div class="kpi-row">
+                    <div class="kpi-card accent-blue">
+                        <div class="kpi-icon"><i class="fas fa-peso-sign"></i></div>
+                        <div class="kpi-body">
+                            <span class="kpi-label">Total Revenue</span>
+                            <span class="kpi-value" id="kpiRevenue">---</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card accent-green">
+                        <div class="kpi-icon"><i class="fas fa-piggy-bank"></i></div>
+                        <div class="kpi-body">
+                            <span class="kpi-label">Total Profit</span>
+                            <span class="kpi-value" id="kpiProfit">---</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card accent-orange">
+                        <div class="kpi-icon"><i class="fas fa-receipt"></i></div>
+                        <div class="kpi-body">
+                            <span class="kpi-label">Transactions</span>
+                            <span class="kpi-value" id="kpiTransactions">---</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card accent-red">
+                        <div class="kpi-icon"><i class="fas fa-triangle-exclamation"></i></div>
+                        <div class="kpi-body">
+                            <span class="kpi-label">Low-Stock Alerts</span>
+                            <span class="kpi-value" id="kpiAlerts">---</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alerts Panel -->
+                <div class="card" id="alertsPanel" style="display:none;">
+                    <div class="card-header alert-header">
+                        <h3><i class="fas fa-bell"></i> Smart Inventory Alerts</h3>
+                    </div>
+                    <div class="card-body" id="alertsList"></div>
+                </div>
+
+                <!-- ===== BUSINESS OVERVIEW ===== -->
+                <h3 class="section-divider"><i class="fas fa-briefcase"></i> Business Overview</h3>
+                
+                <!-- Financial Snapshot -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-line"></i> Financial Health Snapshot</h3>
+                        <span class="badge badge-ok" style="font-size:.68rem;">MongoDB &middot; financial_snapshots</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="financialSnapshotBody">
+                            <div style="text-align:center;color:var(--text-muted);padding:24px;">Loading financial data...</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Profit Engine -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-bolt"></i> Instant Profit Engine</h3>
+                        <div class="header-actions">
+                            <select id="profitFilter" class="input-select" onchange="Dashboard.renderProfit()">
+                                <option value="all">All Sales</option>
+                                <option value="today">Today</option>
+                                <option value="week">This Week</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="profit-summary" id="profitSummary"></div>
+                    </div>
+                </div>
+
+                <!-- ===== SALES PERFORMANCE ===== -->
+                <h3 class="section-divider"><i class="fas fa-chart-area"></i> Sales Performance</h3>
+
+                <!-- Daily Sales Summary Cards -->
+                <div id="dailySalesCards" class="analytics-grid">
+                    <div style="text-align:center;color:var(--text-muted);padding:24px;">Loading daily sales...</div>
+                </div>
+
+                <!-- Daily Sales Trends Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-table"></i> Daily Sales Details</h3>
+                        <span class="badge badge-ok" style="font-size:.68rem;">MongoDB &middot; daily_sales_summary</span>
+                    </div>
+                    <div class="card-body table-responsive">
+                        <table class="data-table compact-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Sales</th>
+                                    <th>Profit</th>
+                                    <th>Transactions</th>
+                                    <th>Items Sold</th>
+                                    <th>Avg Transaction</th>
+                                </tr>
+                            </thead>
+                            <tbody id="dailySalesBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ===== PRODUCT INSIGHTS ===== -->
+                <h3 class="section-divider"><i class="fas fa-box-open"></i> Product Insights</h3>
+
+                <!-- Product Performance Visual -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-bar"></i> Top Performing Products</h3>
+                        <span class="badge badge-ok" style="font-size:.68rem;">Live Data</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="topProductsChart"></div>
+                    </div>
+                </div>
+
+                <!-- Product Performance Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-table"></i> Product Analytics Details</h3>
+                        <span class="badge badge-ok" style="font-size:.68rem;">MongoDB &middot; item_performance_analytics</span>
+                    </div>
+                    <div class="card-body table-responsive">
+                        <table class="data-table compact-table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Category</th>
+                                    <th>Qty Sold</th>
+                                    <th>Revenue</th>
+                                    <th>Profit</th>
+                                    <th>Return Rate</th>
+                                    <th>Damage Rate</th>
+                                    <th>Performance</th>
+                                </tr>
+                            </thead>
+                            <tbody id="itemPerformanceBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ===== GEOGRAPHIC & CUSTOMER INSIGHTS ===== -->
+                <h3 class="section-divider"><i class="fas fa-users"></i> Geographic & Customer Insights</h3>
+
+                <!-- City Performance Cards -->
+                <div id="cityPerformanceCards" class="analytics-grid">
+                    <div style="text-align:center;color:var(--text-muted);padding:24px;">Loading city data...</div>
+                </div>
+
+                <!-- Geographic Performance Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-map-marked-alt"></i> City Performance Details</h3>
+                        <span class="badge badge-ok" style="font-size:.68rem;">MongoDB &middot; city_sales_analytics</span>
+                    </div>
+                    <div class="card-body table-responsive">
+                        <table class="data-table compact-table">
+                            <thead>
+                                <tr>
+                                    <th>City</th>
+                                    <th>Customers</th>
+                                    <th>Total Sales</th>
+                                    <th>Transactions</th>
+                                    <th>Items Sold</th>
+                                    <th>Profit</th>
+                                    <th>Top Product</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cityAnalyticsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Top Customers Visual -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-user-tie"></i> Top Customers by Lifetime Value</h3>
+                        <span class="badge badge-ok" style="font-size:.68rem;">MongoDB &middot; customer_analytics</span>
+                    </div>
+                    <div class="card-body">
+                        <div id="topCustomersChart"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ POS VIEW ============ -->
+            <section class="view" id="view-pos">
+                <h2 class="view-title"><i class="fas fa-cash-register"></i> Point of Sale</h2>
+
+                <div class="pos-layout">
+                    <!-- Left: Product Selection -->
+                    <div class="pos-products">
+                        <div class="pos-controls">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="posSearch" placeholder="Search products..." class="input-text" oninput="POS.filterProducts()">
+                            </div>
+                            <select id="posCategory" class="input-select" onchange="POS.filterProducts()">
+                                <option value="all">All Categories</option>
+                            </select>
+                            <select id="posSupplier" class="input-select" onchange="POS.filterProducts()">
+                                <option value="all">All Suppliers</option>
+                            </select>
+                        </div>
+                        <div class="product-grid" id="productGrid"></div>
+                    </div>
+
+                    <!-- Right: Cart -->
+                    <div class="pos-cart">
+                        <div class="cart-header">
+                            <h3><i class="fas fa-shopping-cart"></i> Current Sale</h3>
+                            <button class="btn btn-ghost btn-sm" onclick="POS.clearCart()"><i class="fas fa-trash"></i> Clear</button>
+                        </div>
+
+                        <!-- Customer Selection / Search -->
+                        <div class="cart-customer">
+                            <label>Search Previous Customer <span class="optional">(optional)</span></label>
+                            <div class="customer-search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="customerSearch" class="input-text" placeholder="Search by name or phone..." oninput="POS.searchCustomers()">
+                            </div>
+                            <div class="customer-search-results" id="customerSearchResults" style="display:none;"></div>
+                        </div>
+
+                        <!-- Customer Details Form -->
+                        <div class="customer-form">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Name <span class="required">*</span></label>
+                                    <input type="text" id="customerName" class="input-text" placeholder="Full name" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Phone <span class="required">*</span></label>
+                                    <input type="tel" id="customerPhone" class="input-text" placeholder="Phone number" required>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="email" id="customerEmail" class="input-text" placeholder="Email (optional)">
+                                </div>
+                                <div class="form-group">
+                                    <label>City</label>
+                                    <input type="text" id="customerCity" class="input-text" placeholder="City (optional)">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Processed By <span class="required">*</span></label>
+                                    <select id="posCashier" class="input-select" required>
+                                        <option value="">-- Select Cashier --</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="cart-items" id="cartItems">
+                            <div class="cart-empty"><i class="fas fa-cart-plus"></i><p>Select products to begin</p></div>
+                        </div>
+
+                        <div class="cart-totals">
+                            <div class="totals-row"><span>Subtotal</span><span id="cartSubtotal">&#8369;0.00</span></div>
+                            <div class="totals-row total-main"><span>Total</span><span id="cartTotal">&#8369;0.00</span></div>
+                            <div class="totals-row profit-row"><span>Est. Profit</span><span id="cartProfit">&#8369;0.00</span></div>
+                        </div>
+
+                        <button class="btn btn-primary btn-block" id="processBtn" onclick="POS.processSale()" disabled>
+                            <i class="fas fa-check-circle"></i> Process Sale
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ INVENTORY VIEW ============ -->
+            <section class="view" id="view-inventory">
+                <h2 class="view-title"><i class="fas fa-boxes-stacked"></i> Inventory Management</h2>
+                
+                <!-- Add/Edit Product Section -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-box"></i> <span id="productFormTitle">Add New Product</span></h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="product-form">
+                            <input type="hidden" id="editProductId">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Product Name <span class="required">*</span></label>
+                                    <input type="text" id="productName" class="input-text" placeholder="e.g., Ryzen 5 5600">
+                                </div>
+                                <div class="form-group">
+                                    <label>Category <span class="required">*</span></label>
+                                    <select id="productType" class="input-select">
+                                        <option value="">-- Select Category --</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Supplier <span class="required">*</span></label>
+                                    <select id="productSupplier" class="input-select">
+                                        <option value="">-- Select Supplier --</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Initial Stock</label>
+                                    <input type="number" id="productQty" class="input-text" min="0" value="0" placeholder="Starting quantity">
+                                </div>
+                            </div>
+                            <div class="form-row row-3">
+                                <div class="form-group">
+                                    <label>Price per Unit <span class="required">*</span></label>
+                                    <input type="number" id="productCost" class="input-text" min="0" step="0.01" placeholder="₱0.00" oninput="Inventory.calculatePrice()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Target Margin (%)</label>
+                                    <input type="number" id="productMargin" class="input-text" min="0" max="99" step="0.1" placeholder="e.g. 30" oninput="Inventory.calculatePrice()">
+                                </div>
+                                <div class="form-group">
+                                    <label>Selling Price <span class="required">*</span></label>
+                                    <input type="number" id="productPrice" class="input-text" min="0" step="0.01" placeholder="₱0.00" oninput="Inventory.calculateMargin()">
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label>Added By <span class="required">*</span></label>
+                                    <select id="productStaff" class="input-select" required>
+                                        <option value="">-- Select Staff --</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-actions">
+                                <button class="btn btn-primary" onclick="Inventory.saveProduct()">
+                                    <i class="fas fa-save"></i> <span id="productSaveBtn">Add Product</span>
+                                </button>
+                                <button class="btn btn-ghost" onclick="Inventory.cancelEdit()" id="productCancelBtn" style="display:none;">
+                                    <i class="fas fa-times"></i> Cancel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Add Stock Section -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-plus-circle"></i> Add Stock</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="stock-form">
+                            <div class="form-group">
+                                <label>Search Product <span class="required">*</span></label>
+                                <div class="customer-search-box">
+                                    <i class="fas fa-search"></i>
+                                    <input type="text" id="addStockSearch" class="input-text" placeholder="Type name to find product..." oninput="Inventory.searchProducts()">
+                                </div>
+                                <div class="product-search-results" id="addStockResults" style="display:none;"></div>
+                                <input type="hidden" id="addStockProductId">
+                            </div>
+                            <div class="form-group">
+                                <label>Current Stock</label>
+                                <input type="text" id="currentStock" class="input-text" readonly placeholder="Select a product first">
+                            </div>
+                            <div class="form-group">
+                                <label>Quantity to Add</label>
+                                <input type="number" id="addStockQty" class="input-text" min="1" value="1">
+                            </div>
+                            <div class="form-group">
+                                <label>Added By <span class="required">*</span></label>
+                                <select id="stockStaff" class="input-select" required>
+                                    <option value="">-- Select Staff --</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" onclick="Inventory.addStock()">
+                                <i class="fas fa-plus"></i> Add Stock
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Current Stock Table -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Current Stock</h3>
+                        <div class="header-actions">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="invSearch" placeholder="Search inventory..." class="input-text" oninput="Inventory.filter()">
+                            </div>
+                            <select id="invStockFilter" class="input-select" onchange="Inventory.filter()">
+                                <option value="all">All Stock Levels</option>
+                                <option value="low">Low Stock Only</option>
+                                <option value="out">Out of Stock</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="card-body table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Category</th>
+                                    <th>Supplier</th>
+                                    <th>Stock</th>
+                                    <th>Selling Price</th>
+                                    <th>Price per Unit</th>
+                                    <th>Margin</th>
+                                    <th>Warranty (Days)</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Inventory Movement Logs (inventory_logs) -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-arrow-right-arrow-left"></i> Inventory Movement Logs</h3>
+                        <span class="badge badge-ok" style="font-size:.68rem;">MongoDB &middot; inventory_logs</span>
+                    </div>
+                    <div class="card-body table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Action</th>
+                                    <th>Item</th>
+                                    <th>Qty Change</th>
+                                    <th>Before</th>
+                                    <th>After</th>
+                                    <th>Description</th>
+                                    <th>By</th>
+                                    <th>Info</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inventoryLogsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+            <section class="view" id="view-ledger">
+                <h2 class="view-title"><i class="fas fa-book"></i> Transaction Ledger</h2>
+                <div class="acid-banner">
+                    <i class="fas fa-shield-halved"></i>
+                    <div>
+                        <strong>Transaction Log</strong>
+                        <p>Track all sales activity with complete visibility into revenue, costs, and profitability. Keep your business data secure and organized.</p>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Sales History</h3>
+                        <div class="header-actions">
+                            <div class="search-box">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="ledgerSearch" placeholder="Search sales..." class="input-text" oninput="Ledger.filter()">
+                            </div>
+                            <input type="date" id="ledgerDateFrom" class="input-text" onchange="Ledger.filter()">
+                            <span class="date-separator">to</span>
+                            <input type="date" id="ledgerDateTo" class="input-text" onchange="Ledger.filter()">
+                        </div>
+                    </div>
+                    <div class="card-body table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Sale #</th>
+                                    <th>Date</th>
+                                    <th>Customer</th>
+                                    <th>Item</th>
+                                    <th>Qty</th>
+                                    <th>Selling Price</th>
+                                    <th>Line Total</th>
+                                    <th>Profit</th>
+                                    <th>Warranty Expires</th>
+                                    <th>Status</th>
+                                    <th>Info</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ledgerBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Sales Logs Table (sales_logs — MongoDB) -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-database"></i> Sales Logs</h3>
+                        <span class="badge badge-ok" style="font-size:.68rem;">MongoDB &middot; sales_logs</span>
+                    </div>
+                    <div class="card-body table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Sale #</th>
+                                    <th>Timestamp</th>
+                                    <th>Customer</th>
+                                    <th>Items</th>
+                                    <th>Total</th>
+                                    <th>Profit</th>
+                                    <th>Description</th>
+                                    <th>By</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="salesLogsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+            <section class="view" id="view-returns">
+                <h2 class="view-title"><i class="fas fa-rotate-left"></i> Returns Management</h2>
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Process a Return</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="return-form">
+                            <div class="form-group">
+                                <label>Sale #</label>
+                                <select id="returnSaleId" class="input-select" onchange="Returns.loadSaleItems()">
+                                    <option value="">-- Select Sale --</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Item</label>
+                                <select id="returnItem" class="input-select" disabled>
+                                    <option value="">-- Select Item --</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Quantity</label>
+                                <input type="number" id="returnQty" class="input-text" min="1" value="1" disabled>
+                            </div>
+                            <div class="form-group">
+                                <label>Reason</label>
+                                <select id="returnReason" class="input-select" disabled>
+                                    <option value="Defective">Defective</option>
+                                    <option value="Wrong Item">Wrong Item</option>
+                                    <option value="Change of Mind">Change of Mind</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Approved By <span class="required">*</span></label>
+                                <select id="returnApprover" class="input-select" disabled required>
+                                    <option value="">-- Select Manager --</option>
+                                </select>
+                            </div>
+                            <button class="btn btn-primary" id="submitReturnBtn" onclick="Returns.submit()" disabled>
+                                <i class="fas fa-rotate-left"></i> Submit Return
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header"><h3>Return History</h3></div>
+                    <div class="card-body table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Return #</th>
+                                    <th>Sale #</th>
+                                    <th>Item</th>
+                                    <th>Qty</th>
+                                    <th>Reason</th>
+                                    <th>Disposition</th>
+                                    <th>Profit Impact</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="returnsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Return Logs (return_logs — MongoDB) -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-database"></i> Return Logs</h3>
+                        <span class="badge badge-ok" style="font-size:.68rem;">MongoDB &middot; return_logs</span>
+                    </div>
+                    <div class="card-body table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Return #</th>
+                                    <th>Sale #</th>
+                                    <th>Item</th>
+                                    <th>Qty</th>
+                                    <th>Reason</th>
+                                    <th>Disposition</th>
+                                    <th>Refund</th>
+                                    <th>Description</th>
+                                    <th>Approved By</th>
+                                    <th>Info</th>
+                                </tr>
+                            </thead>
+                            <tbody id="returnLogsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ SYSTEM ACTIVITY LOG VIEW ============ -->
+            <section class="view" id="view-activity-log">
+                <h2 class="view-title"><i class="fas fa-satellite-dish"></i> System Activity Log</h2>
+                
+                <div class="acid-banner">
+                    <i class="fas fa-database"></i>
+                    <div>
+                        <strong>Real-Time Activity Monitoring</strong>
+                        <p>Track all system operations including sales, inventory changes, returns, and user actions. Monitor your business activity in real-time.</p>
+                    </div>
+                </div>
+
+                <!-- Activity Statistics -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-chart-pie"></i> Activity Summary</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="activity-stats-grid">
+                            <div class="activity-stat-card">
+                                <div class="activity-stat-icon" style="background:rgba(76,175,80,0.1);color:var(--green);">
+                                    <i class="fas fa-shopping-cart"></i>
+                                </div>
+                                <div class="activity-stat-info">
+                                    <span class="activity-stat-label">Sales Processed</span>
+                                    <span class="activity-stat-value" id="activitySalesCount">0</span>
+                                </div>
+                            </div>
+                            <div class="activity-stat-card">
+                                <div class="activity-stat-icon" style="background:rgba(33,150,243,0.1);color:var(--blue);">
+                                    <i class="fas fa-boxes-stacked"></i>
+                                </div>
+                                <div class="activity-stat-info">
+                                    <span class="activity-stat-label">Inventory Updates</span>
+                                    <span class="activity-stat-value" id="activityInventoryCount">0</span>
+                                </div>
+                            </div>
+                            <div class="activity-stat-card">
+                                <div class="activity-stat-icon" style="background:rgba(255,152,0,0.1);color:var(--orange);">
+                                    <i class="fas fa-rotate-left"></i>
+                                </div>
+                                <div class="activity-stat-info">
+                                    <span class="activity-stat-label">Returns Processed</span>
+                                    <span class="activity-stat-value" id="activityReturnsCount">0</span>
+                                </div>
+                            </div>
+                            <div class="activity-stat-card">
+                                <div class="activity-stat-icon" style="background:rgba(108,92,231,0.1);color:var(--accent);">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                                <div class="activity-stat-info">
+                                    <span class="activity-stat-label">Total Activities</span>
+                                    <span class="activity-stat-value" id="activityTotalCount">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Activity Feed -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-stream"></i> Recent System Activity</h3>
+                        <span class="badge badge-ok" style="font-size:.68rem;">LIVE &middot; MongoDB &middot; system_activity_logs</span>
+                    </div>
+                    <div class="card-body" id="activityFeedBody">
+                        <div style="text-align:center;color:var(--text-muted);padding:24px;">Loading activity...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ DATA MANAGEMENT VIEW ============ -->
+            <section class="view" id="view-data-management">
+                <h2 class="view-title"><i class="fas fa-database"></i> Data Management</h2>
+
+                <div class="acid-banner">
+                    <i class="fas fa-server"></i>
+                    <div>
+                        <strong>MySQL Data Editor</strong>
+                        <p>Manage categories, suppliers, staff, and customers. All changes are saved directly to MySQL via stored procedures.</p>
+                    </div>
+                </div>
+
+                <!-- Tab Navigation -->
+                <div class="data-tab-bar">
+                    <button class="data-tab-btn active" data-tab="categories" onclick="DataMgmt.switchTab('categories')">
+                        <i class="fas fa-tags"></i> Categories
+                    </button>
+                    <button class="data-tab-btn" data-tab="suppliers" onclick="DataMgmt.switchTab('suppliers')">
+                        <i class="fas fa-truck"></i> Suppliers
+                    </button>
+                    <button class="data-tab-btn" data-tab="staff" onclick="DataMgmt.switchTab('staff')">
+                        <i class="fas fa-user-tie"></i> Staff
+                    </button>
+                    <button class="data-tab-btn" data-tab="customers" onclick="DataMgmt.switchTab('customers')">
+                        <i class="fas fa-users"></i> Customers
+                    </button>
+                </div>
+
+                <!-- Content Area -->
+                <div class="card">
+                    <div class="card-body" id="dataMgmtContent">
+                        <div style="text-align:center;color:var(--text-muted);padding:24px;">Loading data...</div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Sale Success Modal -->
+    <div class="modal-overlay" id="saleModal">
+        <div class="modal">
+            <div class="modal-icon"><i class="fas fa-circle-check"></i></div>
+            <h3>Sale Processed Successfully</h3>
+            <div id="saleReceipt"></div>
+            <button class="btn btn-primary" onclick="closeModal()">Done</button>
+        </div>
+    </div>
+
+    <!-- Sale Details Modal -->
+    <div class="modal-overlay" id="saleDetailsModal">
+        <div class="modal modal-large">
+            <div class="modal-icon" style="color: var(--accent)"><i class="fas fa-circle-info"></i></div>
+            <h3>Transaction Details</h3>
+            <div id="saleDetailsContent"></div>
+            <button class="btn btn-primary" onclick="Ledger.closeDetailsModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Universal Log Detail Modal -->
+    <div class="modal-overlay" id="logDetailModal">
+        <div class="modal modal-large modal-log">
+            <div class="modal-icon" style="color: var(--accent)"><i class="fas fa-scroll"></i></div>
+            <h3 id="logDetailTitle">Log Detail</h3>
+            <div id="logDetailContent" class="log-detail-scroll"></div>
+            <button class="btn btn-primary" onclick="LogRenderers.closeLogDetailModal()">Close</button>
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+<script src="api-client.js"></script>
+<script src="script.js"></script>
+<script src="data-loader.js"></script>
+<!--<script src="dashboard-loader.js"></script> -->  
+</body>
+</html>
