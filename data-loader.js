@@ -1,107 +1,232 @@
 // ============================================
-// DATA LOADER - FETCH REAL DATA FROM MONGODB
+// DATA LOADER — MySQL + MongoDB
 // ============================================
-// Add this code at the TOP of your script.js file
-// AFTER the mock data arrays are declared
+// Loads core business data (products, categories, suppliers, staff, customers) from MySQL
+// Loads analytics/logs from MongoDB
+// ============================================
 
-// This will load real data from MongoDB when page loads
+// ============================================
+// LOAD CORE DATA FROM MySQL
+// ============================================
+async function loadDataFromMySQL() {
+    console.log('🔄 Loading core data from MySQL...');
 
-async function loadDataFromMongoDB() {
-    console.log('🔄 Loading data from MongoDB...');
-    
     try {
-        // Load sales from MongoDB
-        const salesResponse = await API.getAllSales(1, 1000); // Get first 1000 sales
+        const [catRes, supRes, staffRes, custRes, prodRes] = await Promise.all([
+            API.getCategories(),
+            API.getSuppliers(),
+            API.getStaff(),
+            API.getCustomers(),
+            API.getProducts()
+        ]);
+
+        if (catRes.success) {
+            ITEM_TYPES = catRes.data.map(c => ({ id: c.id, name: c.name, warranty: c.warranty }));
+            console.log(`✅ Loaded ${ITEM_TYPES.length} categories from MySQL`);
+        }
+        if (supRes.success) {
+            SUPPLIERS = supRes.data.map(s => ({ id: s.id, name: s.name, contact: s.contact }));
+            console.log(`✅ Loaded ${SUPPLIERS.length} suppliers from MySQL`);
+        }
+        if (staffRes.success) {
+            STAFF_USERS = staffRes.data.map(s => ({ user_id: s.user_id, username: s.username, role: s.role }));
+            console.log(`✅ Loaded ${STAFF_USERS.length} staff from MySQL`);
+        }
+        if (custRes.success) {
+            CUSTOMERS.length = 0;
+            custRes.data.forEach(c => CUSTOMERS.push({ id: c.id, name: c.name, phone: c.phone, email: c.email, city: c.city }));
+            console.log(`✅ Loaded ${CUSTOMERS.length} customers from MySQL`);
+        }
+        if (prodRes.success) {
+            ITEMS = prodRes.data.map(p => ({
+                id: p.id, name: p.name, price: parseFloat(p.price), cost: parseFloat(p.cost),
+                qty: p.qty, supplierId: p.supplier_id, typeId: p.type_id
+            }));
+            console.log(`✅ Loaded ${ITEMS.length} products from MySQL`);
+        }
+
+        // Load sales from MySQL into SALES + SALE_ITEMS so Returns tab works after refresh
+        try {
+            const salesRes = await fetch('http://localhost:5000/api/mysql/sales');
+            const salesData = await salesRes.json();
+            if (salesData.success && salesData.data) {
+                SALES.length = 0;
+                SALE_ITEMS.length = 0;
+                salesData.data.forEach(s => {
+                    SALES.push({
+                        id: s.id,
+                        date: s.sale_date ? s.sale_date.toString().slice(0, 10) : '',
+                        customerId: s.customer_id || 0,
+                        customerData: {
+                            name: s.customer_name || 'Walk-in',
+                            phone: s.customer_phone || '',
+                            email: s.customer_email || '',
+                            city: s.customer_city || ''
+                        }
+                    });
+                    (s.items || []).forEach(si => {
+                        SALE_ITEMS.push({
+                            id: si.id,
+                            saleId: s.id,
+                            itemId: si.item_id,
+                            qty: si.qty,
+                            soldPrice: parseFloat(si.sold_price) || 0,
+                            warrantyExpiration: si.warranty_expiration || null
+                        });
+                    });
+                });
+                console.log(`✅ Loaded ${SALES.length} sales and ${SALE_ITEMS.length} sale items from MySQL`);
+            }
+        } catch (e) {
+            console.warn('⚠️ Could not load sales from MySQL:', e.message);
+        }
+
+        // Load past returns from MySQL so duplicate-return check works after page reload
+        try {
+            const retRes = await fetch('http://localhost:5000/api/mysql/returns');
+            const retData = await retRes.json();
+            if (retData.success && retData.data) {
+                RETURNS.length = 0;
+                retData.data.forEach(r => RETURNS.push({
+                    id: r.id,
+                    saleId: r.sale_id,
+                    saleItemId: r.sale_item_id,
+                    itemId: r.item_id,
+                    itemName: r.item_name,
+                    qty: r.qty,
+                    soldPrice: parseFloat(r.sold_price) || 0,
+                    returnedAmount: parseFloat(r.returned_amount) || 0,
+                    profitLoss: parseFloat(r.profit_loss) || 0,
+                    reason: r.reason,
+                    disposition: r.disposition || 'Returned to Stock',
+                    restocked: Boolean(r.restocked),
+                    date: r.return_date ? r.return_date.toString().slice(0, 10) : '',
+                    customerId: 0,
+                    customerData: { name: r.customer_name || 'Walk-in' },
+                    status: r.status || 'Approved'
+                }));
+                console.log(`✅ Loaded ${RETURNS.length} past returns from MySQL`);
+            }
+        } catch (e) {
+            console.warn('⚠️ Could not load past returns from MySQL:', e.message);
+        }
+
+        // Re-populate staff dropdowns with loaded data
+        if (typeof populateStaffDropdowns === 'function') {
+            populateStaffDropdowns();
+        }
+
+        console.log('✅ MySQL core data loading complete!');
+    } catch (error) {
+        console.warn('⚠️ Could not load data from MySQL — make sure MySQL is running:', error.message);
+    }
+}
+
+// ============================================
+// SAVE STOCK CHANGE TO MySQL (backward compat endpoint)
+// ============================================
+async function saveStockToMongoDB(itemId, newQty) {
+    try {
+        await fetch(`http://localhost:5000/api/items/${itemId}/stock`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ qty: newQty })
+        });
+        console.log(`✅ Stock saved: item ${itemId} → qty ${newQty}`);
+    } catch (error) {
+        console.warn(`⚠️ Could not save stock for item ${itemId}:`, error.message);
+    }
+}
+
+// ============================================
+// LOAD ANALYTICS/LOGS FROM MongoDB
+// ============================================
+async function loadLogsFromMongoDB() {
+    console.log('🔄 Loading analytics/logs from MongoDB...');
+
+    try {
+        const salesResponse = await API.getAllSales(1, 1000);
         if (salesResponse.success && salesResponse.data) {
             SALES_LOGS = salesResponse.data;
             console.log(`✅ Loaded ${SALES_LOGS.length} sales from MongoDB`);
         }
     } catch (error) {
-        console.warn('⚠️ Could not load sales from MongoDB:', error);
+        console.warn('⚠️ Could not load sales:', error.message);
     }
-    
+
     try {
-        // Load inventory logs from MongoDB
-        const inventoryResponse = await fetch('http://localhost:5000/api/inventory-logs', {
-            headers: { 'Content-Type': 'application/json' }
-        });
+        const inventoryResponse = await fetch('http://localhost:5000/api/inventory-logs');
         const inventoryData = await inventoryResponse.json();
         if (inventoryData.success && inventoryData.data) {
             INVENTORY_LOGS = inventoryData.data;
             console.log(`✅ Loaded ${INVENTORY_LOGS.length} inventory logs from MongoDB`);
         }
     } catch (error) {
-        console.warn('⚠️ Could not load inventory logs from MongoDB:', error);
+        console.warn('⚠️ Could not load inventory logs:', error.message);
     }
-    
+
     try {
-        // Load returns from MongoDB
         const returnsResponse = await API.getAllReturns();
         if (returnsResponse.success && returnsResponse.data) {
             RETURN_LOGS = returnsResponse.data;
             console.log(`✅ Loaded ${RETURN_LOGS.length} returns from MongoDB`);
         }
     } catch (error) {
-        console.warn('⚠️ Could not load returns from MongoDB:', error);
+        console.warn('⚠️ Could not load returns:', error.message);
     }
-    
+
     try {
-        // Load activity logs from MongoDB
-        const activityResponse = await API.getActivityFeed(500); // Get last 500 activities
+        const activityResponse = await API.getActivityFeed(500);
         if (activityResponse.success && activityResponse.data) {
             SYSTEM_ACTIVITY_FEED = activityResponse.data;
             console.log(`✅ Loaded ${SYSTEM_ACTIVITY_FEED.length} activities from MongoDB`);
         }
     } catch (error) {
-        console.warn('⚠️ Could not load activity logs from MongoDB:', error);
+        console.warn('⚠️ Could not load activity logs:', error.message);
     }
-    
-    console.log('✅ MongoDB data loading complete!');
-    
-    // Refresh all displays with real data
-    if (typeof Dashboard !== 'undefined' && Dashboard.init) {
-        Dashboard.init();
-    }
-    if (typeof Ledger !== 'undefined' && Ledger.init) {
-        Ledger.init();
-    }
-    if (typeof ActivityLog !== 'undefined' && ActivityLog.init) {
-        ActivityLog.init();
-    }
+
+    console.log('✅ MongoDB analytics loading complete!');
 }
 
-// Load data when page loads
+// ============================================
+// MASTER LOAD — MySQL first, then MongoDB, then refresh UI
+// ============================================
+async function loadAllData() {
+    // 1. Load core business data from MySQL
+    await loadDataFromMySQL();
+
+    // 2. Load analytics/logs from MongoDB
+    await loadLogsFromMongoDB();
+
+    // 3. Refresh all displays with loaded data
+    if (typeof Inventory !== 'undefined' && Inventory.init) Inventory.init();
+    if (typeof POS !== 'undefined' && POS.init) POS.init();
+    if (typeof Dashboard !== 'undefined' && Dashboard.init) Dashboard.init();
+    if (typeof Ledger !== 'undefined' && Ledger.init) Ledger.init();
+    if (typeof Returns !== 'undefined' && Returns.init) Returns.init();
+    if (typeof ActivityLog !== 'undefined' && ActivityLog.init) ActivityLog.init();
+    if (typeof DataMgmt !== 'undefined' && DataMgmt.render) DataMgmt.render();
+}
+
+// ============================================
+// INIT ON PAGE LOAD
+// ============================================
 window.addEventListener('DOMContentLoaded', async () => {
-    // Wait a bit for API to be ready
     setTimeout(async () => {
-        await loadDataFromMongoDB();
+        await loadAllData();
     }, 500);
 });
 
-console.log('📂 Data loader initialized - will load from MongoDB on page load');
-
-// Force dashboard refresh with real data
-async function refreshDashboardWithRealData() {
-    await loadDataFromMongoDB();
-    
-    // Extra: manually trigger Dashboard refresh
-    setTimeout(() => {
-        if (typeof Dashboard !== 'undefined' && Dashboard.init) {
-            console.log('🔄 Forcing dashboard refresh...');
-            Dashboard.init();
-        }
-    }, 500);
-}
-
-// Also refresh when clicking Dashboard tab
+// Refresh dashboard data on tab click
 document.addEventListener('click', (e) => {
     const navItem = e.target.closest('.nav-item');
     if (navItem && navItem.dataset.view === 'dashboard') {
         setTimeout(() => {
             if (typeof Dashboard !== 'undefined' && Dashboard.init) {
-                console.log('🔄 Dashboard tab clicked - refreshing...');
                 Dashboard.init();
             }
         }, 100);
     }
 });
+
+console.log('📂 Data loader initialized — MySQL for core data, MongoDB for analytics');

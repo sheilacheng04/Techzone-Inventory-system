@@ -47,6 +47,9 @@
                 <li class="nav-item" data-view="activity-log">
                     <i class="fas fa-satellite-dish"></i><span>Activity Log</span>
                 </li>
+                <li class="nav-item" data-view="data-management">
+                    <i class="fas fa-database"></i><span>Data Management</span>
+                </li>
             </ul>
             <div class="sidebar-footer">
                 <small>&copy; 2026 TechZone</small>
@@ -735,6 +738,42 @@
                     </div>
                     <div class="card-body" id="activityFeedBody">
                         <div style="text-align:center;color:var(--text-muted);padding:24px;">Loading activity...</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============ DATA MANAGEMENT VIEW ============ -->
+            <section class="view" id="view-data-management">
+                <h2 class="view-title"><i class="fas fa-database"></i> Data Management</h2>
+
+                <div class="acid-banner">
+                    <i class="fas fa-server"></i>
+                    <div>
+                        <strong>MySQL Data Editor</strong>
+                        <p>Manage categories, suppliers, staff, and customers. All changes are saved directly to MySQL via stored procedures.</p>
+                    </div>
+                </div>
+
+                <!-- Tab Navigation -->
+                <div class="data-tab-bar">
+                    <button class="data-tab-btn active" data-tab="categories" onclick="DataMgmt.switchTab('categories')">
+                        <i class="fas fa-tags"></i> Categories
+                    </button>
+                    <button class="data-tab-btn" data-tab="suppliers" onclick="DataMgmt.switchTab('suppliers')">
+                        <i class="fas fa-truck"></i> Suppliers
+                    </button>
+                    <button class="data-tab-btn" data-tab="staff" onclick="DataMgmt.switchTab('staff')">
+                        <i class="fas fa-user-tie"></i> Staff
+                    </button>
+                    <button class="data-tab-btn" data-tab="customers" onclick="DataMgmt.switchTab('customers')">
+                        <i class="fas fa-users"></i> Customers
+                    </button>
+                </div>
+
+                <!-- Content Area -->
+                <div class="card">
+                    <div class="card-body" id="dataMgmtContent">
+                        <div style="text-align:center;color:var(--text-muted);padding:24px;">Loading data...</div>
                     </div>
                 </div>
             </section>

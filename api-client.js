@@ -1,8 +1,8 @@
 // ============================================
 // TECHZONE API CLIENT
 // ============================================
-// Add this at the TOP of your script.js file
-// This connects your frontend to the backend API
+// Connects frontend to backend API
+// Supports both MySQL (core data) and MongoDB (analytics/logs)
 
 const API_URL = 'http://localhost:5000/api';
 
@@ -35,7 +35,63 @@ const API = {
         }
     },
 
-    // === SALES API ===
+    // ======================================================
+    // MYSQL API — Core Business Data
+    // ======================================================
+
+    // === CATEGORIES ===
+    async getCategories() { return await this.request('/mysql/categories'); },
+    async getCategory(id) { return await this.request(`/mysql/categories/${id}`); },
+    async createCategory(data) { return await this.request('/mysql/categories', { method: 'POST', body: JSON.stringify(data) }); },
+    async updateCategory(id, data) { return await this.request(`/mysql/categories/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
+    async deleteCategory(id) { return await this.request(`/mysql/categories/${id}`, { method: 'DELETE' }); },
+
+    // === SUPPLIERS ===
+    async getSuppliers() { return await this.request('/mysql/suppliers'); },
+    async getSupplier(id) { return await this.request(`/mysql/suppliers/${id}`); },
+    async createSupplier(data) { return await this.request('/mysql/suppliers', { method: 'POST', body: JSON.stringify(data) }); },
+    async updateSupplier(id, data) { return await this.request(`/mysql/suppliers/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
+    async deleteSupplier(id) { return await this.request(`/mysql/suppliers/${id}`, { method: 'DELETE' }); },
+
+    // === STAFF ===
+    async getStaff() { return await this.request('/mysql/staff'); },
+    async getStaffMember(id) { return await this.request(`/mysql/staff/${id}`); },
+    async createStaff(data) { return await this.request('/mysql/staff', { method: 'POST', body: JSON.stringify(data) }); },
+    async updateStaff(id, data) { return await this.request(`/mysql/staff/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
+    async deleteStaff(id) { return await this.request(`/mysql/staff/${id}`, { method: 'DELETE' }); },
+
+    // === CUSTOMERS ===
+    async getCustomers() { return await this.request('/mysql/customers'); },
+    async getCustomerById(id) { return await this.request(`/mysql/customers/${id}`); },
+    async createCustomer(data) { return await this.request('/mysql/customers', { method: 'POST', body: JSON.stringify(data) }); },
+    async updateCustomer(id, data) { return await this.request(`/mysql/customers/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
+    async deleteCustomer(id) { return await this.request(`/mysql/customers/${id}`, { method: 'DELETE' }); },
+
+    // === PRODUCTS (MySQL — replaces MongoDB items) ===
+    async getProducts() { return await this.request('/mysql/products'); },
+    async getProduct(id) { return await this.request(`/mysql/products/${id}`); },
+    async createProduct(data) { return await this.request('/mysql/products', { method: 'POST', body: JSON.stringify(data) }); },
+    async updateProduct(id, data) { return await this.request(`/mysql/products/${id}`, { method: 'PUT', body: JSON.stringify(data) }); },
+    async deleteProduct(id) { return await this.request(`/mysql/products/${id}`, { method: 'DELETE' }); },
+    async updateProductStock(id, qty, action) { return await this.request(`/mysql/products/${id}/stock`, { method: 'PATCH', body: JSON.stringify({ qty, action }) }); },
+    async getLowStockProducts(threshold) { return await this.request(`/mysql/products/low-stock/${threshold || 10}`); },
+
+    // === MYSQL SALES ===
+    async createMySQLSale(data) { return await this.request('/mysql/sales', { method: 'POST', body: JSON.stringify(data) }); },
+    async getMySQLSales() { return await this.request('/mysql/sales'); },
+    async getMySQLSale(id) { return await this.request(`/mysql/sales/${id}`); },
+    async getMySQLSaleItems(saleId) { return await this.request(`/mysql/sale-items/by-sale/${saleId}`); },
+    async getAllMySQLSaleItems() { return await this.request('/mysql/sale-items'); },
+
+    // === MYSQL RETURNS ===
+    async createMySQLReturn(data) { return await this.request('/mysql/returns', { method: 'POST', body: JSON.stringify(data) }); },
+    async getMySQLReturns() { return await this.request('/mysql/returns'); },
+
+    // ======================================================
+    // MONGODB API — Analytics & Logging
+    // ======================================================
+
+    // === SALES (MongoDB logs) ===
     async createSale(saleData) {
         return await this.request('/sales', {
             method: 'POST',
@@ -51,7 +107,7 @@ const API = {
         return await this.request(`/sales/range?startDate=${startDate}&endDate=${endDate}`);
     },
 
-    // === INVENTORY API ===
+    // === INVENTORY (MongoDB logs) ===
     async logInventoryAction(logData) {
         return await this.request('/inventory-logs', {
             method: 'POST',
@@ -63,7 +119,7 @@ const API = {
         return await this.request(`/inventory-logs/${itemId}`);
     },
 
-    // === RETURNS API ===
+    // === RETURNS (MongoDB logs) ===
     async createReturn(returnData) {
         return await this.request('/returns', {
             method: 'POST',
@@ -75,7 +131,7 @@ const API = {
         return await this.request('/returns');
     },
 
-    // === ANALYTICS API ===
+    // === ANALYTICS (MongoDB) ===
     async getDashboardKPIs() {
         return await this.request('/analytics/dashboard');
     },
@@ -91,7 +147,7 @@ const API = {
         });
     },
 
-    // === ACTIVITY LOG API ===
+    // === ACTIVITY LOG (MongoDB) ===
     async logActivity(activityData) {
         return await this.request('/activity', {
             method: 'POST',
@@ -119,12 +175,20 @@ window.addEventListener('DOMContentLoaded', async () => {
         const health = await API.checkHealth();
         console.log('✅ API Connected:', health);
         
-        if (health.databases.mongodb === 'Connected') {
-            console.log('✅ MongoDB Ready - Real data mode enabled!');
-            showNotification('Connected to database - Real data mode active', 'success');
+        const mongoOk = health.databases.mongodb === 'Connected';
+        const mysqlOk = health.databases.mysql === 'Connected';
+        
+        if (mongoOk && mysqlOk) {
+            console.log('✅ MongoDB + MySQL Ready - Full data mode enabled!');
+            showNotification('Connected to MySQL + MongoDB — Real data mode active', 'success');
+        } else if (mysqlOk) {
+            console.log('✅ MySQL Ready, MongoDB offline');
+            showNotification('MySQL connected — MongoDB offline', 'warning');
+        } else {
+            showNotification('Database connections incomplete — check server', 'warning');
         }
     } catch (error) {
-        console.warn('⚠️ API not available - Using mock data mode');
+        console.warn('⚠️ API not available - Using offline mode');
         console.warn('Make sure server is running: npm start');
         showNotification('Running in offline mode - Start server for real data', 'warning');
     }

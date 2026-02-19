@@ -1,84 +1,38 @@
 /* ================================================
    TechZone Staff Portal — Core Application Logic
    ================================================
-   Mock data sourced from TechZone MySQL DDL / DML.
-   No database connection required — all data is
-   simulated client-side for the frontend prototype.
+   Data sourced from MySQL (categories, suppliers,
+   staff, customers, products, sales, sale_item,
+   returns_tbl) and MongoDB (analytics & logs).
    ================================================ */
 
 
 
 
    
-// ========== MOCK DATA (from DDL / DML) ==========
+// ========== DATA ARRAYS (populated from MySQL on load) ==========
 
-// Staff/User mappings for activity logging
-const STAFF_USERS = [
-    { user_id: 1, username: 'admin', role: 'Administrator' },
-    { user_id: 2, username: 'cashier_01', role: 'Cashier' },
-    { user_id: 3, username: 'cashier_02', role: 'Cashier' },
-    { user_id: 4, username: 'manager_01', role: 'Manager' },
-    { user_id: 5, username: 'staff', role: 'Staff' }
-];
+// Staff/User mappings for activity logging — loaded from MySQL
+let STAFF_USERS = [];
 
 function getStaffInfo(username) {
     return STAFF_USERS.find(s => s.username === username) || { user_id: 0, username: username, role: 'Staff' };
 }
 
-const ITEM_TYPES = [
-    { id: 1, name: 'Processor', warranty: 365 },
-    { id: 2, name: 'Graphics Card', warranty: 365 },
-    { id: 3, name: 'Memory', warranty: 365 },
-    { id: 4, name: 'Peripherals', warranty: 365 },
-    { id: 5, name: 'Monitor', warranty: 365 },
-    { id: 6, name: 'Storage', warranty: 365 },
-    { id: 7, name: 'Motherboard', warranty: 365 },
-    { id: 8, name: 'Power Supply', warranty: 365 },
-    { id: 9, name: 'Furniture', warranty: 30 },
-    { id: 10, name: 'Accessories', warranty: 30 },
-    { id: 11, name: 'Audio', warranty: 365 },
-];
+// Categories (item types) — loaded from MySQL
+let ITEM_TYPES = [];
 
-const SUPPLIERS = [
-    { id: 1, name: 'AMD Phil', contact: '02-8888-1111' },
-    { id: 2, name: 'Asus Ph', contact: '02-8888-2222' },
-    { id: 3, name: 'Kingston D.', contact: '02-8888-3333' },
-    { id: 4, name: 'Logi Dist', contact: '02-8888-4444' },
-    { id: 5, name: 'Nvision', contact: '0917-000-1111' },
-    { id: 6, name: 'Rakk Gears', contact: '0918-000-2222' },
-    { id: 7, name: 'Gigabyte Ph', contact: '02-8888-5555' },
-    { id: 8, name: 'Corsair D.', contact: '02-8888-6666' },
-    { id: 9, name: 'SecretLab', contact: '02-8888-7777' },
-    { id: 10, name: 'Generic', contact: 'N/A' },
-    { id: 11, name: 'Maono', contact: '0919-000-3333' },
-    { id: 12, name: 'Creative', contact: '02-8888-8888' },
-];
+// Suppliers — loaded from MySQL
+let SUPPLIERS = [];
 
+// Customers — loaded from MySQL
 const CUSTOMERS = [];
 
 // Walk-in customers (customers stored from previous sales)
 const WALK_IN_CUSTOMERS = [];
 
-// Items — quantities will be mutated as sales/returns happen
-const ITEMS = [
-    { id: 1,  name: 'Ryzen 5 5600',       price: 8500,  cost: 6500,  qty: 50,  supplierId: 1,  typeId: 1 },
-    { id: 2,  name: 'RTX 4060',            price: 18500, cost: 16000, qty: 20,  supplierId: 2,  typeId: 2 },
-    { id: 3,  name: '8GB DDR4 RAM',        price: 1500,  cost: 900,   qty: 100, supplierId: 3,  typeId: 3 },
-    { id: 4,  name: 'Logitech G102',       price: 995,   cost: 700,   qty: 45,  supplierId: 4,  typeId: 4 },
-    { id: 5,  name: '24" IPS Monitor',     price: 7500,  cost: 5500,  qty: 30,  supplierId: 5,  typeId: 5 },
-    { id: 6,  name: 'Mech Keyboard',       price: 2500,  cost: 1800,  qty: 60,  supplierId: 6,  typeId: 4 },
-    { id: 7,  name: '1TB NVMe SSD',        price: 3500,  cost: 2500,  qty: 40,  supplierId: 3,  typeId: 6 },
-    { id: 8,  name: 'Ryzen 7 5700X',       price: 12000, cost: 9500,  qty: 15,  supplierId: 1,  typeId: 1 },
-    { id: 9,  name: 'B550m Motherboard',   price: 6500,  cost: 5000,  qty: 25,  supplierId: 2,  typeId: 7 },
-    { id: 10, name: 'RTX 4070',            price: 38000, cost: 34000, qty: 10,  supplierId: 7,  typeId: 2 },
-    { id: 11, name: '650W PSU',            price: 3000,  cost: 2200,  qty: 35,  supplierId: 8,  typeId: 8 },
-    { id: 12, name: 'Webcam 1080p',        price: 1200,  cost: 800,   qty: 50,  supplierId: 4,  typeId: 4 },
-    { id: 13, name: 'Gaming Chair',        price: 8000,  cost: 5000,  qty: 12,  supplierId: 9,  typeId: 9 },
-    { id: 14, name: 'Ring Light',          price: 500,   cost: 200,   qty: 80,  supplierId: 10, typeId: 10 },
-    { id: 15, name: 'Microphone USB',      price: 2500,  cost: 1500,  qty: 40,  supplierId: 11, typeId: 11 },
-    { id: 16, name: 'Sound Card',          price: 1500,  cost: 900,   qty: 20,  supplierId: 12, typeId: 11 },
-    { id: 17, name: 'RTX 3060',            price: 18000, cost: 14000, qty: 0,   supplierId: 2,  typeId: 2 },
-];
+// Items/Products — loaded from MySQL
+let ITEMS = [];
 
 // Sales built from the DML (using first 100 sale items)
 const SALES = [];
@@ -240,6 +194,10 @@ document.querySelectorAll('.nav-item').forEach(item => {
         document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
         item.classList.add('active');
         document.getElementById('view-' + item.dataset.view).classList.add('active');
+        // Auto-refresh Data Management view when switching to it
+        if (item.dataset.view === 'data-management' && typeof DataMgmt !== 'undefined') {
+            DataMgmt.render();
+        }
     });
 });
 
@@ -1131,22 +1089,67 @@ const POS = {
             }
         }
 
-        // Create sale
-        // Get next sale ID from MongoDB (highest existing + 1)
-let saleId = SALES.length + 1;
-try {
-    const existingSales = await API.getAllSales(1, 1);
-    if (existingSales.success && existingSales.data.length > 0) {
-        const maxId = Math.max(...existingSales.data.map(s => s.sale_id || 0));
-        saleId = maxId + 1;
-    }
-} catch (error) {
-    console.warn('Using local sale ID counter');
-}
+        // ★ PRE-CALCULATE TOTALS for MySQL
+        let totalAmount = 0;
+        let totalProfit = 0;
+        const mysqlItems = this.cart.map(entry => {
+            const item = getItem(entry.itemId);
+            const type = getType(item.typeId);
+            totalAmount += entry.price * entry.qty;
+            totalProfit += (entry.price - (item ? item.cost : 0)) * entry.qty;
+            return {
+                item_id: entry.itemId,
+                quantity: entry.qty,
+                unit_price: entry.price,
+                cost: item ? item.cost : 0,
+                warranty_days: type ? type.warranty : 365
+            };
+        });
+
+        // ★ CREATE SALE IN MYSQL
+        // sp_process_sale → upserts customer, creates sale header
+        // sp_add_sale_item → inserts line items → trigger trg_deduct_stock_after_sale auto-deducts stock
         const saleDate = new Date().toISOString().slice(0, 10);
+        let saleId = null;
+        let mysqlSaleOk = false;
+        try {
+            const mysqlRes = await API.createMySQLSale({
+                customer_name: customerName,
+                customer_phone: customerPhone,
+                customer_email: customerEmail,
+                customer_city: customerCity,
+                items: mysqlItems,
+                total_amount: totalAmount,
+                total_profit: totalProfit,
+                payment_method: 'Cash',
+                processed_by: processedByUsername
+            });
+            if (mysqlRes.success && mysqlRes.data) {
+                saleId = mysqlRes.data.sale_id;
+                mysqlSaleOk = true;
+                console.log(`✅ MySQL sale #${saleId} created (${mysqlItems.length} items, stock deducted by trigger)`);
+            }
+        } catch (e) {
+            console.warn('⚠️ MySQL sale creation failed:', e.message);
+        }
+
+        // Fallback ID if MySQL failed
+        if (!saleId) {
+            saleId = SALES.length + 1;
+            try {
+                const existingSales = await API.getAllSales(1, 1);
+                if (existingSales.success && existingSales.data.length > 0) {
+                    const maxId = Math.max(...existingSales.data.map(s => s.sale_id || 0));
+                    saleId = maxId + 1;
+                }
+            } catch (error) {
+                console.warn('Using local sale ID counter');
+            }
+        }
+
         SALES.push({ id: saleId, date: saleDate, customerId: 0, customerData: { name: customerName, phone: customerPhone, email: customerEmail, city: customerCity } });
 
-        // Process each item atomically
+        // ★ PROCESS EACH ITEM — in-memory updates + receipt
         let receiptHTML = '';
         let total = 0;
         this.cart.forEach(entry => {
@@ -1155,14 +1158,19 @@ try {
             const lineTotal = entry.price * entry.qty;
             total += lineTotal;
 
-            // Deduct inventory (simulates trigger trg_reduce_stock_after_sale)
+            // Deduct in-memory inventory (MySQL stock already deducted by trigger)
             item.qty -= entry.qty;
+
+            // If MySQL failed, persist stock via backward-compat route
+            if (!mysqlSaleOk) {
+                saveStockToMongoDB(item.id, item.qty);
+            }
 
             // Calculate warranty expiration date
             const warrantyDays = type ? type.warranty : 0;
             const warrantyExpiration = calculateWarrantyExpiration(saleDate, warrantyDays);
 
-            // Record sale item
+            // Record sale item in memory
             SALE_ITEMS.push({
                 id: SALE_ITEMS.length + 1,
                 saleId,
@@ -1399,6 +1407,18 @@ const Inventory = {
                 item.qty = qty;
                 item.price = price;
                 item.cost = cost;
+
+                // ★ Persist to MySQL via sp_update_product
+                try {
+                    await API.updateProduct(Number(editId), {
+                        name, price, cost, qty,
+                        supplier_id: supplierId, type_id: typeId
+                    });
+                    console.log(`✅ Product #${editId} updated in MySQL`);
+                } catch (e) {
+                    console.warn('⚠️ MySQL product update failed:', e.message);
+                }
+
                 showToast(`Product "${name}" updated successfully`, 'success');
 
                 // === LOG INTERCEPTOR: inventory_log if stock changed ===
@@ -1429,8 +1449,23 @@ const Inventory = {
                 });
             }
         } else {
-            // Add new product
-            const newId = Math.max(...ITEMS.map(i => i.id)) + 1;
+            // Add new product — create in MySQL first, use MySQL-generated ID
+            let newId;
+            try {
+                const res = await API.createProduct({
+                    name, price, cost, qty,
+                    supplier_id: supplierId, type_id: typeId
+                });
+                if (res.success && res.data) {
+                    newId = res.data.id;
+                    console.log(`✅ Product #${newId} "${name}" created in MySQL`);
+                }
+            } catch (e) {
+                console.warn('⚠️ MySQL product creation failed:', e.message);
+            }
+            if (!newId) {
+                newId = ITEMS.length > 0 ? Math.max(...ITEMS.map(i => i.id)) + 1 : 1;
+            }
             ITEMS.push({
                 id: newId,
                 name,
@@ -1588,6 +1623,7 @@ const Inventory = {
 
         const oldQty = item.qty;
         item.qty += qtyToAdd;
+        saveStockToMongoDB(item.id, item.qty); // ★ persist stock to MongoDB
 
         // === LOG INTERCEPTOR: inventory_log for restock ===
         await LogInterceptors.createInventoryLog({
@@ -1631,6 +1667,57 @@ const Inventory = {
         showToast(`Added ${qtyToAdd} units to ${item.name}. Stock updated: ${oldQty} → ${item.qty}`, 'success');
     },
 
+    async deleteProduct(id) {
+        const item = getItem(id);
+        if (!item) { showToast('Product not found', 'error'); return; }
+        if (!confirm(`Delete "${item.name}"? This cannot be undone.`)) return;
+
+        // ★ Delete from MySQL — trigger trg_prevent_delete_product_with_sales blocks if has sales
+        try {
+            await API.deleteProduct(id);
+            console.log(`✅ Product #${id} "${item.name}" deleted from MySQL`);
+        } catch (e) {
+            console.warn('⚠️ MySQL product deletion failed:', e.message);
+            if (e.message && e.message.includes('existing sales')) {
+                showToast('Cannot delete: product has existing sales records', 'error');
+                return;
+            }
+        }
+
+        const deletedQty = item.qty;
+        ITEMS = ITEMS.filter(i => i.id !== id);
+
+        // Log deletion
+        const staffUsername = document.getElementById('productStaff')?.value?.trim() || 'admin';
+        const staffInfo = getStaffInfo(staffUsername);
+        await LogInterceptors.createInventoryLog({
+            action: 'PRODUCT_DELETED',
+            item_id: id,
+            item_name: item.name,
+            quantity_change: -deletedQty,
+            previous_stock: deletedQty,
+            new_stock: 0,
+            performed_by: staffUsername,
+            reference: 'PRODUCT-DELETE',
+            notes: `Product "${item.name}" deleted from inventory`
+        });
+        await LogInterceptors.createActivityLog({
+            user_id: staffInfo.user_id,
+            username: staffInfo.username,
+            role: staffInfo.role,
+            action: 'DELETE_PRODUCT',
+            reference_id: id,
+            details: `Deleted product "${item.name}" from inventory`
+        });
+
+        showToast(`Product "${item.name}" deleted`, 'success');
+        this.render();
+        POS.init();
+        Dashboard.init();
+        ActivityLog.init();
+        LogRenderers.renderActivityFeed();
+    },
+
     render() {
         const body = document.getElementById('inventoryBody');
         LogRenderers.renderInventoryLogs();
@@ -1659,6 +1746,9 @@ const Inventory = {
                     <td>
                         <button class="btn-info-circle" onclick="Inventory.editProduct(${item.id})" title="Edit Product">
                             <i class="fas fa-pen"></i>
+                        </button>
+                        <button class="btn-info-circle" onclick="Inventory.deleteProduct(${item.id})" title="Delete Product" style="color:var(--red);">
+                            <i class="fas fa-trash"></i>
                         </button>
                     </td>
                 </tr>`;
@@ -1702,6 +1792,9 @@ const Inventory = {
                     <td>
                         <button class="btn-info-circle" onclick="Inventory.editProduct(${item.id})" title="Edit Product">
                             <i class="fas fa-pen"></i>
+                        </button>
+                        <button class="btn-info-circle" onclick="Inventory.deleteProduct(${item.id})" title="Delete Product" style="color:var(--red);">
+                            <i class="fas fa-trash"></i>
                         </button>
                     </td>
                 </tr>`;
@@ -2107,12 +2200,10 @@ const Returns = {
         const saleIds = [...new Set(SALE_ITEMS.map(si => si.saleId))].sort((a, b) => b - a);
         saleIds.forEach(sid => {
             const sale = SALES.find(s => s.id === sid);
+            if (!sale) return;
             const customerData = sale.customerData;
-            const customerName = customerData ? customerData.name : getCustomer(sale.customerId)?.name || 'N/A';
-            // Only add if customer name is not N/A
-            if (customerName !== 'N/A') {
-                select.innerHTML += `<option value="${sid}">Sale #${sid} — ${customerName} (${sale ? sale.date : ''})</option>`;
-            }
+            const customerName = customerData ? customerData.name : getCustomer(sale.customerId)?.name || 'Walk-in';
+            select.innerHTML += `<option value="${sid}">Sale #${sid} — ${customerName} (${sale.date})</option>`;
         });
     },
 
@@ -2171,6 +2262,13 @@ const Returns = {
             return;
         }
 
+        // Prevent duplicate return for the same sale item
+        const alreadyReturned = RETURNS.find(r => r.saleItemId === saleItemId);
+        if (alreadyReturned) {
+            showToast('This item has already been returned from this sale', 'warning');
+            return;
+        }
+
         if (qty > saleItem.qty) {
             showToast(`Cannot return more than ${saleItem.qty} units`, 'error');
             return;
@@ -2190,7 +2288,7 @@ const Returns = {
         } else {
             disposition = 'Returned to Stock';
             restocked = true;
-            // Restock inventory for non-defective returns
+            // Restock in-memory inventory (MySQL stock restored by trigger trg_restore_stock_after_return)
             if (item) {
                 item.qty += qty;
             }
@@ -2222,6 +2320,30 @@ const Returns = {
         };
         
         RETURNS.push(returnRecord);
+
+        // ★ Persist return to MySQL — sp_process_return inserts into returns_tbl
+        // → trigger trg_restore_stock_after_return auto-restocks if non-defective
+        try {
+            const custNameForReturn = sale?.customerData?.name || 'Walk-in';
+            await API.createMySQLReturn({
+                sale_id: saleId,
+                sale_item_id: saleItemId,
+                item_id: saleItem.itemId,
+                item_name: item ? item.name : 'Unknown',
+                qty,
+                sold_price: saleItem.soldPrice,
+                reason,
+                approved_by: approverUsername,
+                customer_name: custNameForReturn
+            });
+            console.log(`✅ Return #${returnRecord.id} persisted to MySQL (stock ${restocked ? 'restored by trigger' : 'not restored - defective'})`);
+        } catch (e) {
+            console.warn('⚠️ MySQL return creation failed:', e.message);
+            // Fallback: persist stock via backward-compat route
+            if (restocked && item) {
+                saveStockToMongoDB(item.id, item.qty);
+            }
+        }
 
         // === LOG INTERCEPTOR: Auto-generate return_log + system_activity_log ===
         const customerNameForLog = sale?.customerData?.name || (sale?.customerId ? (getCustomer(sale.customerId)?.name || 'Walk-in') : 'Walk-in');
@@ -2324,14 +2446,23 @@ const LogInterceptors = {
     cleanInt(val) { return parseInt(val, 10) || 0; },
     cleanDate(val) { return new Date(val || Date.now()); },
 
-    // Generate a pseudo ObjectId
+    // Generate a valid 24-character MongoDB ObjectId format (for in-memory lookups only)
     objectId(prefix) {
-        return prefix + '_' + Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+        const timestamp = Date.now().toString(16).padStart(8, '0'); // 8 hex chars
+        const random = Math.random().toString(16).slice(2).padStart(16, '0'); // 16 hex chars
+        return (timestamp + random).slice(0, 24);
+    },
+    
+    // Strip _id before sending to MongoDB (let it auto-generate)
+    stripIdForMongo(logObj) {
+        const { _id, ...rest } = logObj;
+        return rest;
     },
 
     // --- Inventory Log Creator ---
     async createInventoryLog({ action, item_id, item_name, quantity_change, previous_stock, new_stock, performed_by, reference, notes }) {
         const log = {
+            _id: this.objectId('inv'),
             timestamp: this.cleanDate(new Date()),
             action: this.cleanString(action),
             item_id: this.cleanInt(item_id),
@@ -2348,7 +2479,7 @@ const LogInterceptors = {
         // ⭐ Save to MongoDB via API
         try {
             if (typeof API !== 'undefined') {
-                await API.logInventoryAction(log);
+                await API.logInventoryAction(this.stripIdForMongo(log));
                 console.log('✅ Inventory log saved to MongoDB');
             }
         } catch (error) {
@@ -2370,6 +2501,7 @@ const LogInterceptors = {
             profit: this.cleanNumber(i.profit)
         }));
         const log = {
+            _id: this.objectId('sale'),
             timestamp: this.cleanDate(new Date()),
             sale_id: this.cleanInt(sale_id),
             transaction_type: 'SALE',
@@ -2391,7 +2523,7 @@ const LogInterceptors = {
         // ⭐ Save to MongoDB via API
         try {
             if (typeof API !== 'undefined') {
-                await API.createSale(log);
+                await API.createSale(this.stripIdForMongo(log));
                 console.log('✅ Sale saved to MongoDB:', sale_id);
             }
         } catch (error) {
@@ -2404,6 +2536,7 @@ const LogInterceptors = {
     // --- Return Log Creator ---
     async createReturnLog({ return_id, original_sale_id, item_id, item_name, quantity_returned, reason, disposition, refund_amount, restocked, approved_by, customer_name, notes }) {
         const log = {
+            _id: this.objectId('ret'),
             timestamp: this.cleanDate(new Date()),
             return_id: this.cleanInt(return_id),
             original_sale_id: this.cleanInt(original_sale_id),
@@ -2423,7 +2556,7 @@ const LogInterceptors = {
         // ⭐ Save to MongoDB via API
         try {
             if (typeof API !== 'undefined') {
-                await API.createReturn(log);
+                await API.createReturn(this.stripIdForMongo(log));
                 console.log('✅ Return saved to MongoDB');
             }
         } catch (error) {
@@ -2436,7 +2569,7 @@ const LogInterceptors = {
     // --- System Activity Log Creator (Unified Feed) ---
     createSystemActivityLog({ event_type, user, ip_address, details, severity }) {
         const log = {
-            _id: this.objectId('syslog'),
+            _id: this.objectId('sys'),
             timestamp: this.cleanDate(new Date()),
             event_type: this.cleanString(event_type),
             user: this.cleanString(user || 'system'),
@@ -2452,6 +2585,7 @@ const LogInterceptors = {
     // Logs to the consolidated SYSTEM_ACTIVITY_FEED used by all modules
     async createActivityLog({ user_id = 1, username = 'staff', role = 'Staff', action = 'ACTION', reference_id = 0, details = '' }) {
         const activity = {
+            _id: this.objectId('act'),
             user_id: this.cleanInt(user_id),
             username: this.cleanString(username),
             role: this.cleanString(role),
@@ -2465,7 +2599,7 @@ const LogInterceptors = {
         // ⭐ Save to MongoDB via API
         try {
             if (typeof API !== 'undefined') {
-                await API.logActivity(activity);
+                await API.logActivity(this.stripIdForMongo(activity));
                 console.log('✅ Activity logged to MongoDB');
             }
         } catch (error) {
@@ -2843,6 +2977,390 @@ function populateStaffDropdowns() {
 }
 
 // ============================================================
+// DATA MANAGEMENT MODULE — MySQL CRUD from Frontend
+// ============================================================
+const DataMgmt = {
+    activeTab: 'categories',
+
+    init() {
+        this.switchTab(this.activeTab);
+    },
+
+    switchTab(tab) {
+        this.activeTab = tab;
+        document.querySelectorAll('.data-tab-btn').forEach(b => b.classList.remove('active'));
+        const btn = document.querySelector(`.data-tab-btn[data-tab="${tab}"]`);
+        if (btn) btn.classList.add('active');
+        this.render();
+    },
+
+    async render() {
+        const container = document.getElementById('dataMgmtContent');
+        if (!container) return;
+        
+        switch (this.activeTab) {
+            case 'categories': await this.renderCategories(container); break;
+            case 'suppliers': await this.renderSuppliers(container); break;
+            case 'staff': await this.renderStaff(container); break;
+            case 'customers': await this.renderCustomers(container); break;
+        }
+    },
+
+    // === CATEGORIES ===
+    async renderCategories(container) {
+        container.innerHTML = `
+            <div class="data-form-row">
+                <input type="hidden" id="editCatId">
+                <input type="text" id="catName" class="input-text" placeholder="Category Name">
+                <input type="number" id="catWarranty" class="input-text" placeholder="Warranty (days)" value="365" min="0">
+                <button class="btn btn-primary btn-sm" onclick="DataMgmt.saveCategory()"><i class="fas fa-save"></i> Save</button>
+                <button class="btn btn-ghost btn-sm" onclick="DataMgmt.clearCategoryForm()" id="catCancelBtn" style="display:none;"><i class="fas fa-times"></i> Cancel</button>
+            </div>
+            <table class="data-table compact-table">
+                <thead><tr><th>ID</th><th>Name</th><th>Warranty (days)</th><th>Actions</th></tr></thead>
+                <tbody>${ITEM_TYPES.map(c => `
+                    <tr>
+                        <td>${c.id}</td>
+                        <td>${c.name}</td>
+                        <td>${c.warranty}</td>
+                        <td>
+                            <button class="btn-info-circle" onclick="DataMgmt.editCategory(${c.id})" title="Edit"><i class="fas fa-pen"></i></button>
+                            <button class="btn-info-circle" onclick="DataMgmt.deleteCategory(${c.id})" title="Delete" style="color:var(--red);"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('')}</tbody>
+            </table>
+            <div class="data-badge"><i class="fas fa-database"></i> MySQL &middot; categories &middot; ${ITEM_TYPES.length} rows</div>
+        `;
+    },
+
+    async saveCategory() {
+        const id = document.getElementById('editCatId').value;
+        const name = document.getElementById('catName').value.trim();
+        const warranty = parseInt(document.getElementById('catWarranty').value) || 365;
+        if (!name) { showToast('Name is required', 'warning'); return; }
+        try {
+            if (id) {
+                await API.updateCategory(id, { name, warranty });
+                showToast('Category updated', 'success');
+            } else {
+                await API.createCategory({ name, warranty });
+                showToast('Category added', 'success');
+            }
+            await reloadMySQLData();
+            this.clearCategoryForm();
+            this.render();
+            Inventory.populateDropdowns();
+            POS.init();
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    },
+
+    editCategory(id) {
+        const cat = ITEM_TYPES.find(c => c.id === id);
+        if (!cat) return;
+        document.getElementById('editCatId').value = cat.id;
+        document.getElementById('catName').value = cat.name;
+        document.getElementById('catWarranty').value = cat.warranty;
+        document.getElementById('catCancelBtn').style.display = 'inline-flex';
+    },
+
+    clearCategoryForm() {
+        document.getElementById('editCatId').value = '';
+        document.getElementById('catName').value = '';
+        document.getElementById('catWarranty').value = '365';
+        document.getElementById('catCancelBtn').style.display = 'none';
+    },
+
+    async deleteCategory(id) {
+        if (!confirm('Delete this category? Products using it will lose their category.')) return;
+        try {
+            await API.deleteCategory(id);
+            showToast('Category deleted', 'success');
+            await reloadMySQLData();
+            this.render();
+            Inventory.populateDropdowns();
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    },
+
+    // === SUPPLIERS ===
+    async renderSuppliers(container) {
+        container.innerHTML = `
+            <div class="data-form-row">
+                <input type="hidden" id="editSupId">
+                <input type="text" id="supName" class="input-text" placeholder="Supplier Name">
+                <input type="text" id="supContact" class="input-text" placeholder="Contact">
+                <button class="btn btn-primary btn-sm" onclick="DataMgmt.saveSupplier()"><i class="fas fa-save"></i> Save</button>
+                <button class="btn btn-ghost btn-sm" onclick="DataMgmt.clearSupplierForm()" id="supCancelBtn" style="display:none;"><i class="fas fa-times"></i> Cancel</button>
+            </div>
+            <table class="data-table compact-table">
+                <thead><tr><th>ID</th><th>Name</th><th>Contact</th><th>Actions</th></tr></thead>
+                <tbody>${SUPPLIERS.map(s => `
+                    <tr>
+                        <td>${s.id}</td>
+                        <td>${s.name}</td>
+                        <td>${s.contact}</td>
+                        <td>
+                            <button class="btn-info-circle" onclick="DataMgmt.editSupplier(${s.id})" title="Edit"><i class="fas fa-pen"></i></button>
+                            <button class="btn-info-circle" onclick="DataMgmt.deleteSupplier(${s.id})" title="Delete" style="color:var(--red);"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('')}</tbody>
+            </table>
+            <div class="data-badge"><i class="fas fa-database"></i> MySQL &middot; suppliers &middot; ${SUPPLIERS.length} rows</div>
+        `;
+    },
+
+    async saveSupplier() {
+        const id = document.getElementById('editSupId').value;
+        const name = document.getElementById('supName').value.trim();
+        const contact = document.getElementById('supContact').value.trim();
+        if (!name) { showToast('Name is required', 'warning'); return; }
+        try {
+            if (id) {
+                await API.updateSupplier(id, { name, contact });
+                showToast('Supplier updated', 'success');
+            } else {
+                await API.createSupplier({ name, contact });
+                showToast('Supplier added', 'success');
+            }
+            await reloadMySQLData();
+            this.clearSupplierForm();
+            this.render();
+            Inventory.populateDropdowns();
+            POS.init();
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    },
+
+    editSupplier(id) {
+        const sup = SUPPLIERS.find(s => s.id === id);
+        if (!sup) return;
+        document.getElementById('editSupId').value = sup.id;
+        document.getElementById('supName').value = sup.name;
+        document.getElementById('supContact').value = sup.contact || '';
+        document.getElementById('supCancelBtn').style.display = 'inline-flex';
+    },
+
+    clearSupplierForm() {
+        document.getElementById('editSupId').value = '';
+        document.getElementById('supName').value = '';
+        document.getElementById('supContact').value = '';
+        document.getElementById('supCancelBtn').style.display = 'none';
+    },
+
+    async deleteSupplier(id) {
+        if (!confirm('Delete this supplier?')) return;
+        try {
+            await API.deleteSupplier(id);
+            showToast('Supplier deleted', 'success');
+            await reloadMySQLData();
+            this.render();
+            Inventory.populateDropdowns();
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    },
+
+    // === STAFF ===
+    async renderStaff(container) {
+        container.innerHTML = `
+            <div class="data-form-row">
+                <input type="hidden" id="editStaffId">
+                <input type="text" id="staffUsername" class="input-text" placeholder="Username">
+                <select id="staffRole" class="input-select">
+                    <option value="Staff">Staff</option>
+                    <option value="Cashier">Cashier</option>
+                    <option value="Manager">Manager</option>
+                    <option value="Administrator">Administrator</option>
+                </select>
+                <button class="btn btn-primary btn-sm" onclick="DataMgmt.saveStaff()"><i class="fas fa-save"></i> Save</button>
+                <button class="btn btn-ghost btn-sm" onclick="DataMgmt.clearStaffForm()" id="staffCancelBtn" style="display:none;"><i class="fas fa-times"></i> Cancel</button>
+            </div>
+            <table class="data-table compact-table">
+                <thead><tr><th>ID</th><th>Username</th><th>Role</th><th>Actions</th></tr></thead>
+                <tbody>${STAFF_USERS.map(s => `
+                    <tr>
+                        <td>${s.user_id}</td>
+                        <td>${s.username}</td>
+                        <td><span class="badge badge-ok">${s.role}</span></td>
+                        <td>
+                            <button class="btn-info-circle" onclick="DataMgmt.editStaff(${s.user_id})" title="Edit"><i class="fas fa-pen"></i></button>
+                            <button class="btn-info-circle" onclick="DataMgmt.deleteStaff(${s.user_id})" title="Delete" style="color:var(--red);"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('')}</tbody>
+            </table>
+            <div class="data-badge"><i class="fas fa-database"></i> MySQL &middot; staff &middot; ${STAFF_USERS.length} rows</div>
+        `;
+    },
+
+    async saveStaff() {
+        const id = document.getElementById('editStaffId').value;
+        const username = document.getElementById('staffUsername').value.trim();
+        const role = document.getElementById('staffRole').value;
+        if (!username) { showToast('Username is required', 'warning'); return; }
+        try {
+            if (id) {
+                await API.updateStaff(id, { username, role });
+                showToast('Staff updated', 'success');
+            } else {
+                await API.createStaff({ username, role });
+                showToast('Staff added', 'success');
+            }
+            await reloadMySQLData();
+            this.clearStaffForm();
+            this.render();
+            populateStaffDropdowns();
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    },
+
+    editStaff(userId) {
+        const s = STAFF_USERS.find(u => u.user_id === userId);
+        if (!s) return;
+        document.getElementById('editStaffId').value = s.user_id;
+        document.getElementById('staffUsername').value = s.username;
+        document.getElementById('staffRole').value = s.role;
+        document.getElementById('staffCancelBtn').style.display = 'inline-flex';
+    },
+
+    clearStaffForm() {
+        document.getElementById('editStaffId').value = '';
+        document.getElementById('staffUsername').value = '';
+        document.getElementById('staffRole').value = 'Staff';
+        document.getElementById('staffCancelBtn').style.display = 'none';
+    },
+
+    async deleteStaff(userId) {
+        if (!confirm('Delete this staff member?')) return;
+        try {
+            await API.deleteStaff(userId);
+            showToast('Staff deleted', 'success');
+            await reloadMySQLData();
+            this.render();
+            populateStaffDropdowns();
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    },
+
+    // === CUSTOMERS ===
+    async renderCustomers(container) {
+        container.innerHTML = `
+            <div class="data-form-row">
+                <input type="hidden" id="editCustId">
+                <input type="text" id="custName" class="input-text" placeholder="Name">
+                <input type="text" id="custPhone" class="input-text" placeholder="Phone">
+                <input type="text" id="custEmail" class="input-text" placeholder="Email">
+                <input type="text" id="custCity" class="input-text" placeholder="City">
+                <button class="btn btn-primary btn-sm" onclick="DataMgmt.saveCustomer()"><i class="fas fa-save"></i> Save</button>
+                <button class="btn btn-ghost btn-sm" onclick="DataMgmt.clearCustomerForm()" id="custCancelBtn" style="display:none;"><i class="fas fa-times"></i> Cancel</button>
+            </div>
+            <table class="data-table compact-table">
+                <thead><tr><th>ID</th><th>Name</th><th>Phone</th><th>Email</th><th>City</th><th>Actions</th></tr></thead>
+                <tbody>${CUSTOMERS.map(c => `
+                    <tr>
+                        <td>${c.id}</td>
+                        <td>${c.name}</td>
+                        <td>${c.phone || ''}</td>
+                        <td>${c.email || ''}</td>
+                        <td>${c.city || ''}</td>
+                        <td>
+                            <button class="btn-info-circle" onclick="DataMgmt.editCustomer(${c.id})" title="Edit"><i class="fas fa-pen"></i></button>
+                            <button class="btn-info-circle" onclick="DataMgmt.deleteCustomer(${c.id})" title="Delete" style="color:var(--red);"><i class="fas fa-trash"></i></button>
+                        </td>
+                    </tr>
+                `).join('') || '<tr><td colspan="6" style="text-align:center;color:var(--text-muted);">No customers yet — they are created automatically from POS sales</td></tr>'}</tbody>
+            </table>
+            <div class="data-badge"><i class="fas fa-database"></i> MySQL &middot; customers &middot; ${CUSTOMERS.length} rows</div>
+        `;
+    },
+
+    async saveCustomer() {
+        const id = document.getElementById('editCustId').value;
+        const name = document.getElementById('custName').value.trim();
+        const phone = document.getElementById('custPhone').value.trim();
+        const email = document.getElementById('custEmail').value.trim();
+        const city = document.getElementById('custCity').value.trim();
+        if (!name) { showToast('Name is required', 'warning'); return; }
+        try {
+            if (id) {
+                await API.updateCustomer(id, { name, phone, email, city });
+                showToast('Customer updated', 'success');
+            } else {
+                await API.createCustomer({ name, phone, email, city });
+                showToast('Customer added', 'success');
+            }
+            await reloadMySQLData();
+            this.clearCustomerForm();
+            this.render();
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    },
+
+    editCustomer(id) {
+        const c = CUSTOMERS.find(cu => cu.id === id);
+        if (!c) return;
+        document.getElementById('editCustId').value = c.id;
+        document.getElementById('custName').value = c.name;
+        document.getElementById('custPhone').value = c.phone || '';
+        document.getElementById('custEmail').value = c.email || '';
+        document.getElementById('custCity').value = c.city || '';
+        document.getElementById('custCancelBtn').style.display = 'inline-flex';
+    },
+
+    clearCustomerForm() {
+        document.getElementById('editCustId').value = '';
+        document.getElementById('custName').value = '';
+        document.getElementById('custPhone').value = '';
+        document.getElementById('custEmail').value = '';
+        document.getElementById('custCity').value = '';
+        document.getElementById('custCancelBtn').style.display = 'none';
+    },
+
+    async deleteCustomer(id) {
+        if (!confirm('Delete this customer?')) return;
+        try {
+            await API.deleteCustomer(id);
+            showToast('Customer deleted', 'success');
+            await reloadMySQLData();
+            this.render();
+        } catch (e) { showToast('Error: ' + e.message, 'error'); }
+    }
+};
+
+// ============================================================
+// RELOAD MySQL DATA — refreshes all in-memory arrays
+// ============================================================
+async function reloadMySQLData() {
+    try {
+        const [catRes, supRes, staffRes, custRes, prodRes] = await Promise.all([
+            API.getCategories(),
+            API.getSuppliers(),
+            API.getStaff(),
+            API.getCustomers(),
+            API.getProducts()
+        ]);
+
+        if (catRes.success) {
+            ITEM_TYPES = catRes.data.map(c => ({ id: c.id, name: c.name, warranty: c.warranty }));
+        }
+        if (supRes.success) {
+            SUPPLIERS = supRes.data.map(s => ({ id: s.id, name: s.name, contact: s.contact }));
+        }
+        if (staffRes.success) {
+            STAFF_USERS = staffRes.data.map(s => ({ user_id: s.user_id, username: s.username, role: s.role }));
+        }
+        if (custRes.success) {
+            CUSTOMERS.length = 0;
+            custRes.data.forEach(c => CUSTOMERS.push({ id: c.id, name: c.name, phone: c.phone, email: c.email, city: c.city }));
+        }
+        if (prodRes.success) {
+            ITEMS = prodRes.data.map(p => ({
+                id: p.id, name: p.name, price: parseFloat(p.price), cost: parseFloat(p.cost),
+                qty: p.qty, supplierId: p.supplier_id, typeId: p.type_id
+            }));
+        }
+        console.log(`✅ MySQL data reloaded: ${ITEM_TYPES.length} categories, ${SUPPLIERS.length} suppliers, ${STAFF_USERS.length} staff, ${CUSTOMERS.length} customers, ${ITEMS.length} products`);
+    } catch (e) {
+        console.warn('⚠️ Could not reload MySQL data:', e.message);
+    }
+}
+
+// ============================================================
 // Activity Log
 // ============================================================
 const ActivityLog = {
@@ -2894,6 +3412,10 @@ window.ActivityLog = ActivityLog;
 window.LogInterceptors = LogInterceptors;
 window.LogRenderers = LogRenderers;
 window.showLogDetail = showLogDetail;
+window.showActivityLogDetail = showActivityLogDetail;
+window.DataMgmt = DataMgmt;
+window.reloadMySQLData = reloadMySQLData;
+window.populateStaffDropdowns = populateStaffDropdowns;
 
 document.addEventListener('DOMContentLoaded', () => {
     populateStaffDropdowns();
@@ -2903,4 +3425,5 @@ document.addEventListener('DOMContentLoaded', () => {
     Ledger.init();
     Returns.init();
     ActivityLog.init();
+    DataMgmt.init();
 });

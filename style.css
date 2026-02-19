@@ -1853,3 +1853,76 @@ body {
     .activity-title { font-size: .7rem; }
     .activity-detail { font-size: .62rem; }
 }  
+
+/* ============================================
+   DATA MANAGEMENT MODULE
+   ============================================ */
+.data-tab-bar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.data-tab-btn {
+    padding: 8px 18px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--card);
+    color: var(--text-muted);
+    font-size: .82rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.data-tab-btn:hover {
+    border-color: var(--accent);
+    color: var(--text);
+}
+
+.data-tab-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+
+.data-form-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+.data-form-row .input-text,
+.data-form-row .input-select {
+    flex: 1;
+    min-width: 140px;
+}
+
+.data-badge {
+    text-align: right;
+    font-size: .72rem;
+    color: var(--text-muted);
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+}
+
+.data-badge i {
+    margin-right: 4px;
+    color: var(--accent);
+}
+
+/* DATA MANAGEMENT — responsive */
+@media (max-width: 600px) {
+    .data-tab-bar { gap: 4px; }
+    .data-tab-btn { padding: 6px 12px; font-size: .74rem; }
+    .data-form-row { flex-direction: column; }
+    .data-form-row .input-text,
+    .data-form-row .input-select { min-width: 100%; }
+}

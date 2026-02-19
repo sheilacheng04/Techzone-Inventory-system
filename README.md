@@ -1,624 +1,750 @@
-# TechZone Inventory System - Complete Documentation
+# TechZone Inventory System
 
-A professional-grade **POS (Point of Sale) and Inventory Management System** with real-time analytics, activity logging, and MongoDB backend integration.
-
----
-
-## Table of Contents
-
-1. [Overview](#overview)
-2. [Features](#features)
-3. [System Architecture](#system-architecture)
-4. [Quick Start](#quick-start)
-5. [Project Structure](#project-structure)
-6. [Database Collections](#database-collections)
-7. [API Endpoints](#api-endpoints)
-8. [Frontend Modules](#frontend-modules)
-9. [Admin Guide](#admin-guide)
-10. [Troubleshooting](#troubleshooting)
+A **full-stack inventory & point-of-sale (POS) system** built with Node.js, Express, and MongoDB for analytics. Designed for retail businesses to manage products, sales, inventory, and customer returns with real-time analytics and audit trails.
 
 ---
 
-## Overview
+## 🎯 Key Features
 
-**TechZone Inventory System** is a complete business management solution built with:
-- **Frontend**: HTML5, CSS3, Vanilla JavaScript ES6+
-- **Backend**: Node.js, Express.js
-- **Database**: MongoDB (Atlas or local)
-- **Analytics**: Real-time dashboards with 8 analytics collections
-- **Logging**: Comprehensive activity and audit trails
-
-### Current Status
-✅ **Production-Ready Frontend** - Fully functional with mock MongoDB collections
-⚙️ **MongoDB Backend Integration Ready** - Complete initialization scripts and API routes provided
+✅ **Point of Sale (POS)** — Process sales with cart management & receipt printing  
+✅ **Inventory Management** — Real-time stock tracking across MySQL & MongoDB  
+✅ **Sales Analytics** — Dashboard with revenue, profit, and trend analysis  
+✅ **Transaction Ledger** — Complete sales history with MongoDB persistence  
+✅ **Returns Management** — Process returns with refund tracking  
+✅ **Activity Logging** — Comprehensive audit trail for compliance  
+✅ **Data Management** — CRUD operations for categories, suppliers, staff, customers  
+✅ **Multi-Database Architecture** — MySQL for business data, MongoDB for analytics & logs
 
 ---
 
-## Features
-
-### Core Functionality
-- ✅ **POS Module**: Process sales with real-time inventory deduction
-- ✅ **Inventory Management**: Track stock, add/edit products, manage suppliers
-- ✅ **Sales Ledger**: View detailed sales history and metrics
-- ✅ **Returns Management**: Process returns and refunds
-- ✅ **Activity Logging**: Complete audit trail of all system actions
-- ✅ **Dual-Screen Dashboard**: Sales summary and analytics
-
-### Analytics & Reporting
-- ✅ **Daily Sales Summary**: Tracks total sales, profit, transactions by date
-- ✅ **City-Based Analytics**: Sales performance by geographic location
-- ✅ **Customer Analytics**: Lifetime value, segments, purchase patterns
-- ✅ **Product Performance**: Sales velocity, profitability, turnover rates
-- ✅ **Financial Snapshots**: Comprehensive P&L and KPI tracking
-- ✅ **Inventory Health**: Stock levels, slow-moving items, dead stock
-
-### Advanced Features
-- ✅ **Real-Time Updates**: All modules sync instantly on transactions
-- ✅ **Multi-Tab Navigation**: Dashboard, POS, Inventory, Ledger, Returns, Activity Log
-- ✅ **Activity Timeline**: Shows all system actions in chronological order
-- ✅ **Customer Segmentation**: VIP, Regular, At-Risk categories
-- ✅ **Performance Ratings**: Items rated on sales velocity and profitability
-
----
-
-## System Architecture
+## 🏗️ System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    FRONTEND (Browser)                       │
-│  HTML5 + CSS3 + Vanilla JavaScript ES6+                     │
-│                                                             │
-│  Dashboard │ POS │ Inventory │ Ledger │ Returns │ Activity │
-└────────────────────────┬────────────────────────────────────┘
-                         │
-                    API Layer (Optional)
-                         │
-┌────────────────────────┴────────────────────────────────────┐
-│              BACKEND (Node.js + Express)                    │
-│  - API Routes (api-routes.js)                               │
-│  - Database Module (mongodb-db.js)                          │
-│  - Error Handling & Middleware                              │
-└────────────────────────┬────────────────────────────────────┘
-                         │
-┌────────────────────────┴────────────────────────────────────┐
-│         MONGODB DATABASE (TechZoneMongo)                    │
-│                                                             │
-│  Analytics (8)          │ Logs (4)        │ Core (3)       │
-│  ─────────────────      │ ─────────────   │ ─────────────  │
-│  • daily_sales_summary  │ • sales_logs    │ • items        │
-│  • city_sales_analytics │ • inventory_logs│ • customers    │
-│  • customer_analytics   │ • return_logs   │ • suppliers    │
-│  • item_performance     │ • activity_logs │                │
-│  • inventory_health     │                 │                │
-│  • financial_snapshots  │                 │                │
-│  • supplier_analytics   │                 │                │
-│  • city_distribution    │                 │                │
-└─────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────┐
+│                    Browser (Frontend)                    │
+│  HTML5 + CSS3 + Vanilla JavaScript                      │
+│  (Dashboard, POS, Inventory, Ledger, Returns, Logs)     │
+└────────────────────────────┬────────────────────────────┘
+                             │  HTTP/REST API
+┌────────────────────────────▼────────────────────────────┐
+│              Express.js Server (Node.js)                 │
+│  Routes: /api/sales, /api/products, /api/logs, etc.    │
+│  Middleware: Authentication, Validation, Error Handling │
+└────────────────┬──────────────────────┬────────────────┘
+                 │                      │
+        MySQL connection    MongoDB connection
+                 │                      │
+    ┌────────────▼──────────┐   ┌──────▼──────────────┐
+    │  MySQL Database       │   │ MongoDB Database    │
+    │  (Core Business Data) │   │ (Analytics & Logs)  │
+    │                       │   │                     │
+    │ • categories          │   │ • sales_logs        │
+    │ • suppliers           │   │ • inventory_logs    │
+    │ • staff               │   │ • return_logs       │
+    │ • customers           │   │ • activity_logs     │
+    │ • products            │   │ • customer_*        │
+    │ • sales               │   │ • item_performance  │
+    │ • sale_item           │   │ • daily_summaries   │
+    │ • returns_tbl         │   │ • city_analytics    │
+    │                       │   │                     │
+    │ Stored Procedures:    │   │ Collections auto-   │
+    │ • sp_process_sale     │   │ generated from logs │
+    │ • sp_add_sale_item    │   │                     │
+    │ • sp_process_return   │   │                     │
+    │ • (+ 17 more)         │   │                     │
+    └───────────────────────┘   └─────────────────────┘
 ```
+
+### Data Flow
+
+1. **Sales Transaction**
+   - Customer → POS Form (Browser)
+   - Submit → Express API (`/api/sales`)
+   - MySQL: Insert sale header & items via stored procedures
+   - Trigger: Auto-deduct stock
+   - Log: `LogInterceptors.createSalesLog()` → `SalesLog` model
+   - MongoDB: Save sales_logs collection + update analytics
+
+2. **Inventory Movement**
+   - Edit/Restock/Sale → `LogInterceptors.createInventoryLog()`
+   - MongoDB: inventory_logs collection
+   - Dashboard: Real-time updates via frontend refresh
+
+3. **Activity Audit Trail**
+   - User action → `LogInterceptors.createActivityLog()`
+   - MongoDB: system_activity_logs collection
+   - Activity feed displays username, role, action, timestamp
 
 ---
 
-## Quick Start
+## 💻 Technology Stack
 
-### Option 1: Frontend Only (Current Setup)
-Perfect for testing the UI and workflows without backend setup.
+| Layer | Technology | Version |
+|-------|-----------|---------|
+| **Frontend** | HTML5, CSS3, Vanilla JS | Latest |
+| **Backend** | Node.js, Express.js | v16+ |
+| **Primary Database** | MySQL | v5.7+ |
+| **Analytics Database** | MongoDB | Community v4.0+ |
+| **ODM** | Mongoose | v5.0+ |
+| **Other** | dotenv (config) | Latest |
 
+---
+
+## 📋 Requirements
+
+### System Requirements
+- **Windows 10/11, macOS, or Linux**
+- **8GB RAM minimum** (for MySQL + MongoDB)
+- **2GB free disk space** minimum
+
+### Software Requirements
+- [Node.js](https://nodejs.org/) **v16 or higher**
+- [MySQL Community Server](https://www.mysql.com/downloads/) **v5.7 or higher**
+- [MongoDB Community Server](https://www.mongodb.com/try/download/community) **v4.0 or higher**
+- [MySQL Workbench](https://www.mysql.com/products/workbench/) (optional, for database management)
+- [MongoDB Compass](https://www.mongodb.com/try/download/compass) (optional, for viewing MongoDB data)
+
+### Ports Required
+- **5000** (Express server) — configurable in `.env`
+- **3306** (MySQL) — default
+- **27017** (MongoDB) — default
+
+---
+
+## 📦 Installation & Setup
+
+### Step 1 — Extract & Navigate
 ```bash
-# 1. Open in browser
-open index.html
-
-# 2. Use the system normally
-# All data is stored in browser's JavaScript arrays
+# Extract the zip file
+# Open terminal/command prompt in the project folder
+cd TeachZone-Inventory-System
 ```
 
-### Option 2: With MongoDB Backend
-
-#### Prerequisites
-- Node.js 16+ ([Download](https://nodejs.org/))
-- MongoDB Account ([Sign up free](https://www.mongodb.com/cloud/atlas))
-- npm (comes with Node.js)
-
-#### Step-by-Step Setup
-
+### Step 2 — Install Dependencies
 ```bash
-# 1. Install dependencies
 npm install
-
-# 2. Create .env file (copy from .env.example)
-# Copy .env.example to .env and fill in your MongoDB URI
-cp .env.example .env
-
-# 3. Initialize MongoDB database
-# Run initialization script in MongoDB Atlas console
-mongosh < mongodb_init.js
-
-# 4. Start backend server
-npm run dev
-
-# 5. Open in browser
-# Frontend will now sync with MongoDB backend
-open index.html
 ```
 
-**Success Indicators:**
-- Server console shows: `✓ MongoDB connected successfully`
-- Browser console shows: `✓ API health check passed`
-- Dashboard loads data from MongoDB
+This installs:
+- `express` — web framework
+- `mysql2` — MySQL driver
+- `mongoose` — MongoDB ODM
+- `dotenv` — environment variable management
+
+### Step 3 — Configure Environment Variables
+
+Create a `.env` file in the **project root**:
+
+```env
+# MySQL Configuration
+MYSQL_HOST=localhost
+MYSQL_PORT=3306
+MYSQL_USER=root
+MYSQL_PASSWORD=your_mysql_password_here
+MYSQL_DATABASE=techzone
+
+# MongoDB Configuration
+MONGODB_URI=mongodb://localhost:27017/TechZoneMongo
+
+# Server Configuration
+PORT=5000
+NODE_ENV=development
+```
+
+**Replace `your_mysql_password_here`** with your actual MySQL root password (set during MySQL installation).
+
+### Step 4 — Start Database Services
+
+**MySQL (Windows):**
+```powershell
+# Option 1: Use Windows Services
+# Open Services (services.msc) and start "MySQL80" or "MySQL"
+
+# Option 2: Start via command line
+mysqld
+```
+
+**MySQL (macOS/Linux):**
+```bash
+brew services start mysql
+# or
+sudo systemctl start mysql
+```
+
+**MongoDB (Windows):**
+```powershell
+# Option 1: Use Windows Services
+# Open Services (services.msc) and start "MongoDB"
+
+# Option 2: Start via command line
+mongod
+```
+
+**MongoDB (macOS/Linux):**
+```bash
+brew services start mongodb-community
+# or
+sudo systemctl start mongod
+```
+
+### Step 5 — Initialize MySQL Database
+
+```bash
+node scripts/init-mysql.js
+```
+
+Expected output:
+```
+✅ MySQL Connection: OK
+✅ Created categories table
+✅ Created suppliers table
+✅ Created staff table
+✅ Created customers table
+✅ Created products table
+✅ Created sales table
+✅ Created sale_item table
+✅ Created returns_tbl table
+✅ Created all 20 stored procedures
+✅ Seeded 11 categories
+✅ Seeded 12 suppliers
+✅ Seeded 5 staff members
+✅ Seeded 17 products
+```
+
+### Step 6 — Start the Server
+
+```bash
+npm start
+```
+
+Expected output:
+```
+✅ MySQL Connected Successfully
+✅ MongoDB Connected Successfully
+MySQL Tables: categories, suppliers, staff, customers, products, sales, sale_item, returns_tbl
+🚀 TechZone Inventory System Server
+📡 Server running on: http://localhost:5000
+```
+
+### Step 7 — Open in Browser
+
+Navigate to: **http://localhost:5000**
+
+You should see:
+- ✅ Dashboard tab with sales analytics
+- ✅ Point of Sale tab with products from MySQL
+- ✅ Inventory tab with stock management
+- ✅ Transaction Ledger with sales history
+- ✅ Returns tab for processing returns
+- ✅ Activity Log (unified feed)
+- ✅ Data Management tab for CRUD operations
 
 ---
 
-## Project Structure
+## 📁 Project Structure
 
 ```
-Techzone-Inventory-system/
+TeachZone-Inventory-System/
+├── server.js                    # Express server, API routes, DB connections
+├── script.js                    # Frontend logic (POS, inventory, dashboards)
+├── index.html                   # Main HTML template
+├── style.css                    # Styling (CSS variables for theming)
+├── api-client.js                # Fetch wrapper for API calls (API object)
+├── data-loader.js               # Load initial seed data from server
+├── dashboard-loader.js          # Initialize dashboard charts & analytics
+├── package.json                 # Dependencies & scripts
+├── .env                         # Environment variables (create this file)
+├── README.md                    # This file
 │
-├── Frontend Files (Core Application)
-│   ├── index.html              # Main application interface
-│   ├── script.js               # All application logic (2,841 lines)
-│   └── style.css               # Styling for all modules
+├── scripts/
+│   ├── init-mysql.js            # Initialize MySQL tables, procedures, seed data
+│   └── init-mongodb.js          # (Optional) Initialize MongoDB indexes
 │
-├── Backend Files (MongoDB Integration)
-│   ├── server.js               # Express.js server initialization
-│   ├── mongodb-db.js           # MongoDB connection & operations
-│   ├── api-routes.js           # REST API endpoint definitions
-│   ├── mongodb_init.js         # Database initialization script
-│   └── package.json            # Node.js dependencies
-│
-├── Configuration Files
-│   ├── .env.example            # Environment variables template
-│   └── .gitignore              # Git ignore rules
-│
-└── Documentation
-    ├── README.md               # This file
-    ├── MONGODB_SCHEMA.md       # Complete database schema
-    ├── MONGODB_COLLECTIONS.json# JSON schema reference
-    ├── MIGRATION_GUIDE.md      # Backend migration steps
-    └── SETUP_CHECKLIST.md      # Implementation checklist
+└── [Generated by Node]
+    └── node_modules/            # Installed npm packages
+```
+
+### Key Files Explained
+
+| File | Purpose |
+|------|---------|
+| `server.js` | Express server with API routes, MySQL/MongoDB models, authentication middleware |
+| `script.js` | Frontend logic: POS cart, inventory forms, analytics rendering, log viewers |
+| `index.html` | HTML structure: tabs for Dashboard, POS, Inventory, Ledger, Returns, Logs, Data Mgmt |
+| `style.css` | CSS with theming variables (`--primary`, `--success`, `--danger`, etc.) |
+| `api-client.js` | Wrapper functions for API calls (e.g., `API.createSale()`, `API.getProducts()`) |
+| `data-loader.js` | Fetch product/staff/customer data from server on page load |
+| `dashboard-loader.js` | Initialize charts for sales trends, profit analysis, etc. |
+| `scripts/init-mysql.js` | Setup script: creates tables, stored procedures, seed data |
+
+---
+
+## 🗄️ Database Architecture
+
+### MySQL (Core Business Data)
+
+**Tables:**
+
+| Table | Columns | Purpose |
+|-------|---------|---------|
+| `categories` | cat_id, cat_name, description, warranty | Product categories with warranty periods |
+| `suppliers` | sup_id, sup_name, contact, phone, email, address | Vendor information |
+| `staff` | staff_id, username, password, role, email, created_at | Users (Staff, Cashier, Manager, Admin) |
+| `customers` | customer_id, name, phone, email, city, created_at | Customer information (auto-created from sales) |
+| `products` | product_id, cat_id, sup_id, product_name, description, price, cost, qty, created_at | Product inventory |
+| `sales` | sale_id, customer_id, total_amount, total_profit, payment_method, processed_by, created_at | Sale headers |
+| `sale_item` | sale_item_id, sale_id, product_id, quantity, unit_price, line_total, cost, profit | Line items per sale |
+| `returns_tbl` | return_id, sale_id, product_id, quantity_returned, reason, disposition, refund_amount, restocked, approved_by | Return requests |
+
+**Stored Procedures (20 total):**
+- `sp_process_sale` — Insert sale header + customer (upsert)
+- `sp_add_sale_item` — Add line item (triggers stock deduction)
+- `sp_process_return` — Process return + restock
+- `sp_get_inventory_value` — Calculate total inventory value
+- `sp_get_profit_margin` — Calculate profit for products
+- And 15 more for analytics, reporting, data management
+
+**Triggers:**
+- `trg_deduct_stock_after_sale` — Auto-deducts stock when sale_item inserted
+- `trg_restock_after_return` — Auto-restocks when return approved
+
+### MongoDB (Analytics & Logs)
+
+**Collections:**
+
+| Collection | Purpose | Created By |
+|------------|---------|-----------|
+| `sales_logs` | Detailed transaction history with nested customer & items | `LogInterceptors.createSalesLog()` |
+| `inventory_logs` | Stock movement audit trail (sales, restocks, adjustments) | `LogInterceptors.createInventoryLog()` |
+| `return_logs` | Return processing history & refunds | `LogInterceptors.createReturnLog()` |
+| `system_activity_logs` | System events (login, edits, bulk operations) | `LogInterceptors.createSystemActivityLog()` |
+| `activity_logs` | Unified activity feed with user actions | `LogInterceptors.createActivityLog()` |
+| `customer_analytics` | Customer purchase patterns & repeat rate | Auto-generated from sales_logs |
+| `item_performance_analytics` | Product sales count, revenue, profit margins | Auto-generated from sales_logs |
+| `daily_sales_summaries` | Daily revenue, transaction count, average order value | Auto-generated from sales_logs |
+| `city_sales_analytics` | Sales breakdown by customer city | Auto-generated from sales_logs |
+
+**Data Example (sales_logs):**
+```json
+{
+  "_id": ObjectId("..."),
+  "timestamp": ISODate("2026-02-19T10:30:00Z"),
+  "sale_id": 101,
+  "transaction_type": "SALE",
+  "customer": {
+    "customer_id": 5,
+    "name": "John Doe",
+    "phone": "09123456789",
+    "email": "john@example.com",
+    "city": "Manila"
+  },
+  "items": [
+    {
+      "item_id": 12,
+      "item_name": "Laptop",
+      "quantity": 1,
+      "unit_price": 45000,
+      "line_total": 45000,
+      "cost": 30000,
+      "profit": 15000
+    }
+  ],
+  "total_amount": 45000,
+  "total_profit": 15000,
+  "payment_method": "Cash",
+  "processed_by": "cashier_01"
+}
 ```
 
 ---
 
-## Database Collections
+## 🔌 API Routes
 
-### Analytics Collections (8)
+### Sales
 
-| Collection | Purpose | Key Fields |
-|-----------|---------|-----------|
-| `daily_sales_summary` | Daily performance tracking | date, total_sales, total_profit, transactions_count |
-| `city_sales_analytics` | Geographic performance | city, total_sales_amount, total_customers, most_purchased_item |
-| `customer_analytics` | Customer insights | name, total_spent, total_orders, customer_segment, loyalty_score |
-| `item_performance_analytics` | Product metrics | item_id, total_quantity_sold, profit_margin, inventory_turnover |
-| `inventory_health_analytics` | Stock analysis | total_items, stock_status, slow_moving_items, dead_stock_value |
-| `financial_snapshots` | P&L summary | gross_sales, net_profit, profit_margin, roi, current_ratio |
-| `supplier_analytics` | Supplier performance | supplier_id, on_time_delivery_rate, quality_rating, reliability_score |
-| `city_customer_distribution` | Location demographics | city, customer_segments, churn_rate, acquisition_cost |
+- `POST /api/sales` — Create a new sale (processes items, updates stock)
+- `GET /api/sales` — Get all sales (paginated)
+- `GET /api/sales/range` — Get sales by date range
 
-### Log Collections (4)
+### Products
 
-| Collection | Purpose | Key Fields |
-|-----------|---------|-----------|
-| `sales_logs` | Complete sale records | sale_id, customer, items[], total_amount, total_profit |
-| `inventory_logs` | Stock movements | action, item_id, quantity_change, previous_stock, new_stock |
-| `return_logs` | Return transactions | return_id, original_sale_id, items[], refund_status |
-| `system_activity_logs` | Audit trail | user_id, action, reference_id, timestamp, status |
+- `GET /api/products` — Get all products with stock info
+- `POST /api/products` — Add new product
+- `PUT /api/products/:id` — Update product (price, cost, stock)
+- `DELETE /api/products/:id` — Delete product
 
----
+### Customers
 
-## API Endpoints
+- `GET /api/customers` — Get all customers
+- `POST /api/customers` — Create new customer
+- `PUT /api/customers/:id` — Update customer info
+- `DELETE /api/customers/:id` — Delete customer
 
-### Sales Endpoints
-```
-POST   /api/sales                       Create new sale
-GET    /api/sales?startDate=...&endDate=...  Get sales by date range
-GET    /api/sales/:phoneNumber          Get customer's sales history
-```
+### Categories
 
-### Inventory Endpoints
-```
-POST   /api/inventory-logs              Log inventory action
-GET    /api/inventory-logs/:itemId      Get item's history
-GET    /api/inventory-logs/action/:action  Get logs by action type
-```
+- `GET /api/categories` — Get all categories
+- `POST /api/categories` — Create category
+- `PUT /api/categories/:id` — Update category
+- `DELETE /api/categories/:id` — Delete category
 
-### Customer Endpoints
-```
-GET    /api/customers/analytics         Get top customers
-GET    /api/customers/city/:city        Get customers by city
-GET    /api/customers/vip               Get VIP customers
-PUT    /api/customers/analytics/:phone  Update customer analytics
-```
+### Staff
 
-### Product Endpoints
-```
-GET    /api/items/analytics             Get top selling items
-GET    /api/items/low-stock             Get low stock items
-GET    /api/items/poor-performing       Get underperforming items
-PUT    /api/items/analytics/:itemId     Update item performance
-```
+- `GET /api/staff` — Get all staff members
+- `POST /api/staff` — Create staff member
+- `PUT /api/staff/:id` — Update staff
+- `DELETE /api/staff/:id` — Delete staff
 
-### City Endpoints
-```
-GET    /api/cities/analytics            Get all city analytics
-GET    /api/cities/top                  Get top 5 cities
-PUT    /api/cities/analytics/:city      Update city analytics
-```
+### Suppliers
 
-### Activity Log Endpoints
-```
-POST   /api/activity-logs               Create activity log
-GET    /api/activity-logs/user/:username  Get user's activity
-GET    /api/activity-logs/action/:action  Get logs by action
-GET    /api/activity-logs/feed          Get activity feed
-```
+- `GET /api/suppliers` — Get all suppliers
+- `POST /api/suppliers` — Create supplier
+- `PUT /api/suppliers/:id` — Update supplier
+- `DELETE /api/suppliers/:id` — Delete supplier
 
-### Reporting Endpoints
-```
-GET    /api/reports/dashboard-kpis      Get KPI dashboard
-GET    /api/reports/monthly             Get monthly report
-GET    /api/reports/daily-sales         Get daily sales summary
-```
+### Inventory Logs
 
-### Health/Status
-```
-GET    /api/health                      Health check endpoint
-```
+- `GET /api/inventory-logs` — Get inventory movements
+- `POST /api/inventory-logs` — Record stock movement
+
+### Analytics
+
+- `GET /api/analytics/dashboard` — Revenue, profit, transaction counts
+- `GET /api/analytics/customers` — Customer metrics
+- `GET /api/analytics/items` — Product performance
+- `GET /api/analytics/daily-summary` — Daily sales summary
+- `GET /api/analytics/city-sales` — Sales by city
+
+### Activity Logs
+
+- `GET /api/activity-logs` — Get system activity feed
+- `POST /api/activity-logs` — Log user action
 
 ---
 
-## Frontend Modules
+## 🎮 Usage Guide
 
-### 1. **Dashboard Module**
-**Purpose**: Real-time business intelligence
-- Daily sales total and profit
-- Transaction count and average value
-- Top 5 selling products
-- Top 5 performing cities
-- Customer analytics summary
-- Financial snapshots
+### Processing a Sale
 
-**Key Functions**:
-```javascript
-Dashboard.init()              // Initialize dashboard
-Dashboard.resetStats()        // Clear mock data
-Dashboard.buildLiveAnalytics() // Aggregate analytics
-```
+1. **Select POS Tab** → "Point of Sale"
+2. **Enter Customer Info:** Name, Phone, Email, City
+3. **Select Products:** Choose products from dropdown, enter quantity
+4. **Add to Cart:** Click "Add Item"
+5. **Review Cart:** See total amount & profit
+6. **Select Cashier:** Choose staff member processing sale
+7. **Process Sale:** Click "Process Sale"
+   - Sales header saved to MySQL
+   - Stock auto-deducted by trigger
+   - Logs created in MongoDB
+8. **View Receipt:** Modal shows transaction details
+9. **Print Receipt:** Use browser print (Ctrl+P) or print button
 
-### 2. **POS Module** (Point of Sale)
-**Purpose**: Process customer sales
-- Select/search for items
-- Add items to cart
-- Apply discounts
-- Process payment
-- Print receipt
+### Managing Inventory
 
-**Key Functions**:
-```javascript
-POS.processSale()            // Complete sale transaction
-POS.handlePayment()          // Process payment
-LogInterceptors.createSaleLog() // Log sale action
-```
+1. **Select Inventory Tab**
+2. **View Products:** See all products with stock levels
+3. **Edit Product:** Click edit button to change price/cost/stock
+4. **Restock Product:** Increase quantity
+5. **View Inventory Logs:** See stock movements in "Inventory Logs" section
 
-### 3. **Inventory Module**
-**Purpose**: Manage products and stock
-- View current inventory
-- Add new products
-- Edit product details
-- Update stock quantities
-- Set reorder points
+### Viewing Analytics
 
-**Key Functions**:
-```javascript
-Inventory.addStock()         // Restock item
-Inventory.saveProduct()      // Add/edit product
-Inventory.init()             // Load inventory table
-```
+1. **Select Dashboard Tab**
+2. **Revenue Chart:** Line chart of sales over time
+3. **Profit Analysis:** Pie chart showing profit breakdown
+4. **Transaction Stats:** Total sales, average order value
+5. **Top Products:** Best-selling items by revenue
+6. **Customer Insights:** Repeat customer rate, city breakdown
 
-### 4. **Ledger Module**
-**Purpose**: View sales history and metrics
-- All sales records
-- Sales by customer
-- Sales by date range
-- Profit analysis
+### Processing Returns
 
-**Key Functions**:
-```javascript
-Ledger.init()                // Load sales table
-Ledger.getCustomerSales()    // Filter by customer
-```
+1. **Select Returns Tab**
+2. **Enter Return Info:** Original sale #, product, quantity returned, reason
+3. **Set Disposition:** Refund, Restock, Donate
+4. **Enter Refund Amount**
+5. **Approve Return:** Select approval manager
+6. **Process Return:** Click "Process Return"
+   - Return logged to MongoDB
+   - If "Restock" = stock increases
+   - Inventory log created
 
-### 5. **Returns Module**
-**Purpose**: Process returns and refunds
-- Create return transactions
-- Search original sales
-- Process refunds
-- Track return reasons
+### Activity Logging
 
-**Key Functions**:
-```javascript
-Returns.processReturn()      // Create return
-LogInterceptors.createReturnLog() // Log return
-```
-
-### 6. **Activity Log Module**
-**Purpose**: Complete audit trail
-- All system actions
-- Filter by action type
-- Filter by user
-- Timestamps for all operations
-
-**Key Functions**:
-```javascript
-ActivityLog.init()           // Load activity timeline
-LogRenderers.renderActivityFeed() // Render logs
-```
-
----
-
-## Admin Guide
-
-### User Roles & Permissions
-The system supports the following roles:
-- **Admin**: Full system access, reports, settings
-- **Manager**: POS, inventory, reports
-- **Cashier**: POS operations only
-- **Inventory Staff**: Inventory management only
+1. **Select Logs Tab** (Activity Log)
+2. **View Unified Feed:** All user actions in chronological order
+3. **Click Entry:** View details of specific action
+4. **Filter by Type:** See sales, restocks, returns, edits
 
 ### Data Management
 
-#### Backup & Recovery
+1. **Select Data Management Tab**
+2. **Choose Entity:** Categories, Suppliers, Staff, Customers
+3. **View Table:** See all records
+4. **Add New:** Click "New [Entity]" button
+5. **Edit:** Click edit icon on row
+6. **Delete:** Click delete icon (with confirmation)
+
+---
+
+## ⚙️ Configuration
+
+### Environment Variables (.env)
+
+```env
+# MySQL
+MYSQL_HOST=localhost              # MySQL server hostname
+MYSQL_PORT=3306                   # MySQL port (default 3306)
+MYSQL_USER=root                   # MySQL username
+MYSQL_PASSWORD=password           # MySQL password
+MYSQL_DATABASE=techzone           # Database name
+
+# MongoDB
+MONGODB_URI=mongodb://localhost:27017/TechZoneMongo
+
+# Server
+PORT=5000                         # Express server port
+NODE_ENV=development              # Environment (development/production)
+```
+
+### Port Changes
+
+To run on a different port:
+
+1. Edit `.env`:
+   ```env
+   PORT=5001
+   ```
+2. Restart server: `npm start`
+3. Access: `http://localhost:5001`
+
+### Database Connection Issues
+
+**Test MySQL:**
 ```bash
-# Backup MongoDB database
-mongodump --uri="mongodb+srv://user:pass@cluster.mongodb.net/TechZoneMongo" --out ./backup
-
-# Restore from backup
-mongorestore --uri="mongodb+srv://user:pass@cluster.mongodb.net/TechZoneMongo" ./backup
+mysql -u root -p -h localhost
 ```
 
-#### Resetting Data
+**Test MongoDB:**
 ```bash
-# Clear all collections (MongoDB)
-db.daily_sales_summary.deleteMany({})
-db.sales_logs.deleteMany({})
-# ... repeat for all collections
-
-# Reset frontend (clear browser storage)
-localStorage.clear()
-location.reload()
-```
-
-### Performance Optimization
-
-1. **Database Indexing**: Already configured in `mongodb_init.js`
-2. **Query Optimization**: Use aggregation pipelines for large datasets
-3. **Caching**: Implement Redis for frequently accessed data
-4. **Pagination**: Limit results to 100 records by default
-
-### Security Best Practices
-
-1. ✅ **Use HTTPS**: Enable SSL/TLS in production
-2. ✅ **Environment Variables**: Never hardcode secrets in code
-3. ✅ **JWT Tokens**: Implement for API authentication
-4. ✅ **Rate Limiting**: Prevent abuse with request throttling
-5. ✅ **Input Validation**: Validate all user inputs
-6. ✅ **CORS Policy**: Restrict to trusted domains
-7. ✅ **Database Backups**: Regular automated backups
-
----
-
-## Troubleshooting
-
-### Connection Issues
-
-**Problem**: "MongoDB connection failed"
-```
-Solution:
-1. Verify MONGODB_URI in .env file
-2. Check MongoDB Atlas cluster is running
-3. Verify database user credentials
-4. Check IP whitelist includes your IP
-5. Test connection: mongosh "your_connection_string"
-```
-
-**Problem**: "CORS error in browser"
-```
-Solution:
-1. Verify CORS_ORIGIN in .env matches your frontend URL
-2. Check API_BASE in api-client.js is correct
-3. Test API: curl http://localhost:3000/api/health
-4. Check browser console for exact error
-```
-
-### Performance Issues
-
-**Problem**: "Dashboard loading slowly"
-```
-Solution:
-1. Check MongoDB indexes are created
-2. Verify network latency to MongoDB server
-3. Implement query pagination
-4. Use aggregation pipelines for complex queries
-5. Enable caching for frequently accessed data
-```
-
-**Problem**: "Out of memory errors"
-```
-Solution:
-1. Implement pagination for data queries
-2. Set up data retention policies
-3. Archive old logs
-4. Increase Node.js memory: node --max-old-space-size=4096 server.js
-5. Monitor with: db.currentOp()
-```
-
-### Data Consistency
-
-**Problem**: "Analytics not updating"
-```
-Solution:
-1. Verify sales are being logged correctly
-2. Check analytics collection has data
-3. Run aggregation pipeline manually
-4. Clear cache and refresh
-5. Check for JavaScript errors in console
-```
-
-### Authentication Issues
-
-**Problem**: "401 Unauthorized"
-```
-Solution:
-1. Check JWT token is included in headers
-2. Verify JWT_SECRET matches server config
-3. Check token hasn't expired
-4. Generate new token and retry
+mongosh mongodb://localhost:27017
 ```
 
 ---
 
-## File Reference Guide
+## 🔧 Troubleshooting
 
-### core System
-| File | Lines | Purpose |
-|------|-------|---------|
-| `script.js` | 2,841 | Complete application logic |
-| `index.html` | N/A | HTML structure & UI layout |
-| `style.css` | N/A | Application styling |
+### MySQL Connection Failed
 
-### Backend (MongoDB)
-| File | Purpose |
-|------|---------|
-| `server.js` | Express server initialization |
-| `mongodb-db.js` | MongoDB operations class |
-| `api-routes.js` | REST API endpoint definitions |
-| `mongodb_init.js` | Database schema & indexes |
+**Error:** `Error: connect ECONNREFUSED 127.0.0.1:3306`
 
-### Documentation
-| File | Purpose |
-|------|---------|
-| `README.md` | This file - complete guide |
-| `MONGODB_SCHEMA.md` | Detailed database schema |
-| `MONGODB_COLLECTIONS.json` | JSON schema reference |
-| `MIGRATION_GUIDE.md` | Backend setup instructions |
-| `.env.example` | Environment variables template |
+**Solutions:**
+1. Check MySQL is running: `mysql --version`
+2. Verify credentials in `.env`
+3. Ensure port 3306 is not blocked
+4. Restart MySQL service:
+   ```bash
+   # Windows
+   net stop MySQL80
+   net start MySQL80
+   
+   # macOS/Linux
+   brew services restart mysql
+   ```
+
+### MongoDB Connection Failed
+
+**Error:** `Error: connect ECONNREFUSED 127.0.0.1:27017`
+
+**Solutions:**
+1. Check MongoDB is running
+2. Ensure port 27017 is not blocked
+3. Restart MongoDB:
+   ```bash
+   # Windows
+   net stop MongoDB
+   net start MongoDB
+   
+   # macOS/Linux
+   brew services restart mongodb-community
+   ```
+
+### init-mysql.js Fails
+
+**Error:** `Access Denied for user 'root'@'localhost'`
+
+**Solutions:**
+1. Verify MYSQL_PASSWORD in `.env` is correct
+2. Reset MySQL password:
+   ```bash
+   # Windows
+   mysqld --skip-grant-tables
+   mysql -u root
+   mysql> FLUSH PRIVILEGES;
+   mysql> ALTER USER 'root'@'localhost' IDENTIFIED BY 'new_password';
+   ```
+3. Update `.env` with new password
+
+### Products Not Showing in POS
+
+**Solutions:**
+1. Check MySQL is connected: `npm start` should show ✅ MySQL Connected
+2. Verify init-mysql.js ran successfully
+3. Check products table: `SELECT * FROM products;` in MySQL Workbench
+4. Restart server: `npm start`
+
+### Port 5000 Already in Use
+
+**Error:** `EADDRINUSE: address already in use :::5000`
+
+**Solutions:**
+1. Change PORT in `.env` to `5001` or another available port
+2. Or kill process using port 5000:
+   ```bash
+   # Windows
+   netstat -ano | findstr :5000
+   taskkill /PID <PID> /F
+   
+   # macOS/Linux
+   lsof -i :5000
+   kill -9 <PID>
+   ```
+
+### Logs Not Saving to MongoDB
+
+**Solutions:**
+1. Check MongoDB connection: `npm start` should show ✅ MongoDB Connected
+2. Verify MONGODB_URI in `.env`
+3. Check MongoDB Compass for collections at `mongodb://localhost:27017`
+4. Restart server
 
 ---
 
-## Code Statistics
+## 🔄 Reset & Fresh Start
 
+### Reset MySQL Data
+
+```bash
+# Option 1: Full reset with re-initialization
+node scripts/init-mysql.js --reset
+
+# Option 2: Manual reset via MySQL Workbench
+TRUNCATE TABLE sale_item;
+TRUNCATE TABLE sales;
+TRUNCATE TABLE returns_tbl;
+DELETE FROM products;
+DELETE FROM customers;
+DELETE FROM staff;
+DELETE FROM suppliers;
+DELETE FROM categories;
 ```
-Total Lines of Code:
-├── Frontend: 2,841 lines (script.js)
-├── Backend: 3,200+ lines (server.js, mongodb-db.js, api-routes.js)
-├── Database: 1,200+ lines (mongodb_init.js)
-└── Documentation: 2,000+ lines (guides & schemas)
 
-Total Collections: 12
-├── Analytics: 8
-├── Logs: 4
+Then run initialization:
+```bash
+node scripts/init-mysql.js
+```
 
-Total API Endpoints: 30+
-Total Database Indexes: 25+
+### Reset MongoDB Data
+
+**Via MongoDB Compass:**
+1. Open MongoDB Compass
+2. Connect to `mongodb://localhost:27017`
+3. Navigate to `TechZoneMongo` database
+4. Delete collections:
+   - sales_logs
+   - inventory_logs
+   - return_logs
+   - activity_logs
+   - system_activity_logs
+   - customer_analytics
+   - item_performance_analytics
+   - daily_sales_summaries
+   - city_sales_analytics
+
+Then restart server:
+```bash
+npm start
 ```
 
 ---
 
-## Road Map
+## 📊 Business Logic & Key Features
 
-### Completed ✅
-- [x] Frontend with all 6 modules
-- [x] Real-time analytics aggregation
-- [x] Activity logging system
-- [x] MongoDB schema design
-- [x] REST API endpoints
-- [x] Environment configuration
-- [x] Backend initialization scripts
-- [x] Complete documentation
+### Automatic Stock Deduction
 
-### Upcoming Features 🚀
-- [ ] User authentication & role-based access
-- [ ] Advanced reporting (PDF export, charts)
-- [ ] Mobile app (React Native/Flutter)
-- [ ] Real-time notifications
-- [ ] Automated backup system
-- [ ] Multi-location support
-- [ ] Integration with payment gateways
-- [ ] Inventory forecasting
-- [ ] Customer loyalty program
-- [ ] Supplier ordering automation
+When a sale is processed:
+1. Frontend validates stock availability
+2. MySQL stored procedure `sp_process_sale` inserts sale header
+3. `sp_add_sale_item` inserts each line item
+4. **Trigger `trg_deduct_stock_after_sale` automatically deducts stock from products table**
+5. Frontend updates in-memory stock
+6. MongoDB logs record the sale
 
----
+### Profit Tracking
 
-## Support & Community
+- **Unit Profit** = Selling Price - Cost
+- **Line Profit** = Unit Profit × Quantity
+- **Sale Total Profit** = Sum of line profits
+- **Dashboard** shows cumulative profit by category, product, or time period
 
-### Getting Help
-1. **Documentation**: Check MIGRATION_GUIDE.md for setup help
-2. **Error Messages**: See Troubleshooting section above
-3. **Database Schema**: Refer to MONGODB_SCHEMA.md for field details
-4. **API Docs**: Check api-routes.js comments for endpoint details
+### Customer Auto-Creation
 
-### Reporting Issues
-Include the following when reporting bugs:
-1. Error message (full stack trace)
-2. Steps to reproduce
-3. System info (OS, Node version, browser)
-4. Relevant code/configuration
-5. Whether frontend or backend issue
+- When processing a sale, if customer doesn't exist, they're auto-created
+- Captured data: name, phone, email, city
+- Subsequent sales can select repeat customers
+- Useful for walk-in customers
 
-### Contributing
-1. Fork the repository
-2. Create feature branch: `git checkout -b feature/amazing-feature`
-3. Commit changes: `git commit -m 'Add amazing feature'`
-4. Push to branch: `git push origin feature/amazing-feature`
-5. Open pull request
+### Activity Audit Trail
+
+Every major action is logged:
+- Sale processed
+- Inventory edited
+- Return processed
+- Customer created/updated
+- Product added/edited
+- **Timestamp, user, role, action, details** recorded
+- Accessible via Activity Log tab & MongoDB
 
 ---
 
-## License
+## 🚀 Performance Tips
 
-MIT License - See LICENSE file for details
+1. **Dashboard Loading:**
+   - Charts render on-demand when tab selected
+   - Limit analytics queries to last 30 days
+   - Use pagination (50 items per page) for ledger
 
----
+2. **Large Inventory:**
+   - Product dropdown uses search filter
+   - Consider indexing MySQL tables for faster queries
 
-## Credits
+3. **MongoDB Growth:**
+   - Archive old logs (>1 year) to separate collection
+   - Use indexes on `timestamp`, `sale_id`, `product_id`
 
-**TechZone Inventory System**
-Built with ❤️ for retailers and business professionals
-
----
-
-## Frequently Asked Questions (FAQ)
-
-**Q: Can I use this without MongoDB?**
-A: Yes! The frontend works perfectly with mock data. To persist data long-term, MongoDB backend is recommended.
-
-**Q: Is this suitable for production?**
-A: Yes, with proper configuration. Follow the MIGRATION_GUIDE.md for production setup.
-
-**Q: How many locations can I manage?**
-A: Currently single location. Multi-location support is on the roadmap.
-
-**Q: What's the maximum number of transactions?**
-A: With MongoDB, you can handle millions of transactions. Pagination recommended for UI.
-
-**Q: Can I export data?**
-A: Yes, use MongoDB export tools or create custom API endpoints for data export.
-
-**Q: Is there a demo?**
-A: Yes, open index.html in any browser to see the fully functional demo.
+4. **Browser Performance:**
+   - Use modern browser (Chrome, Firefox, Edge)
+   - Clear cache if experiencing stale data
+   - Monitor browser console (F12) for errors
 
 ---
 
-**Last Updated**: January 2024
-**Version**: 1.0.0
-**Maintained By**: TechZone Development Team
+## 📝 License & Credits
+
+**TechZone Inventory System**  
+Built with Node.js, Express.js, MySQL, and MongoDB  
+Designed for retail inventory management and analytics
 
 ---
 
-## Next Steps
+## 📞 Support & Troubleshooting
 
-1. **For Frontend Testing**: Open `index.html` in your browser
-2. **For Backend Setup**: Follow `MIGRATION_GUIDE.md`
-3. **For Database Details**: Read `MONGODB_SCHEMA.md`
-4. **For API Integration**: Check `MONGODB_COLLECTIONS.json`
+For issues:
+1. Check the **Troubleshooting** section above
+2. Verify database services are running
+3. Check `.env` file configuration
+4. Review browser console (F12) for frontend errors
+5. Check server terminal for backend errors
+6. Review MongoDB Compass for data integrity
 
-**Enjoy using TechZone Inventory System! 🎉**
+---
+
+*Last Updated: February 19, 2026*
